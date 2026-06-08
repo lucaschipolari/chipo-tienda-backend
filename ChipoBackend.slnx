@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ChipoBackend.API/ChipoBackend.API.csproj" />
+    <Project Path="src/ChipoBackend.Application/ChipoBackend.Application.csproj" />
+    <Project Path="src/ChipoBackend.Domain/ChipoBackend.Domain.csproj" />
+    <Project Path="src/ChipoBackend.Infrastructure/ChipoBackend.Infrastructure.csproj" />
+  </Folder>
+</Solution>

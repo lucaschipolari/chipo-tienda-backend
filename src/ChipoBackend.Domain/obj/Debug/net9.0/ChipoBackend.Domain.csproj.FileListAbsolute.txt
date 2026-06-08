@@ -1,0 +1,13 @@
+C:\Users\lvs_1\Documents\Lucas\chipoar\chipo-pagina\chipo-backend\src\ChipoBackend.Domain\bin\Debug\net9.0\ChipoBackend.Domain.deps.json
+C:\Users\lvs_1\Documents\Lucas\chipoar\chipo-pagina\chipo-backend\src\ChipoBackend.Domain\bin\Debug\net9.0\ChipoBackend.Domain.dll
+C:\Users\lvs_1\Documents\Lucas\chipoar\chipo-pagina\chipo-backend\src\ChipoBackend.Domain\bin\Debug\net9.0\ChipoBackend.Domain.pdb
+C:\Users\lvs_1\Documents\Lucas\chipoar\chipo-pagina\chipo-backend\src\ChipoBackend.Domain\obj\Debug\net9.0\ChipoBackend.Domain.csproj.AssemblyReference.cache
+C:\Users\lvs_1\Documents\Lucas\chipoar\chipo-pagina\chipo-backend\src\ChipoBackend.Domain\obj\Debug\net9.0\ChipoBackend.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\lvs_1\Documents\Lucas\chipoar\chipo-pagina\chipo-backend\src\ChipoBackend.Domain\obj\Debug\net9.0\ChipoBackend.Domain.AssemblyInfoInputs.cache
+C:\Users\lvs_1\Documents\Lucas\chipoar\chipo-pagina\chipo-backend\src\ChipoBackend.Domain\obj\Debug\net9.0\ChipoBackend.Domain.AssemblyInfo.cs
+C:\Users\lvs_1\Documents\Lucas\chipoar\chipo-pagina\chipo-backend\src\ChipoBackend.Domain\obj\Debug\net9.0\ChipoBackend.Domain.csproj.CoreCompileInputs.cache
+C:\Users\lvs_1\Documents\Lucas\chipoar\chipo-pagina\chipo-backend\src\ChipoBackend.Domain\obj\Debug\net9.0\ChipoBackend.Domain.sourcelink.json
+C:\Users\lvs_1\Documents\Lucas\chipoar\chipo-pagina\chipo-backend\src\ChipoBackend.Domain\obj\Debug\net9.0\ChipoBackend.Domain.dll
+C:\Users\lvs_1\Documents\Lucas\chipoar\chipo-pagina\chipo-backend\src\ChipoBackend.Domain\obj\Debug\net9.0\refint\ChipoBackend.Domain.dll
+C:\Users\lvs_1\Documents\Lucas\chipoar\chipo-pagina\chipo-backend\src\ChipoBackend.Domain\obj\Debug\net9.0\ChipoBackend.Domain.pdb
+C:\Users\lvs_1\Documents\Lucas\chipoar\chipo-pagina\chipo-backend\src\ChipoBackend.Domain\obj\Debug\net9.0\ref\ChipoBackend.Domain.dll

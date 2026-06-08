@@ -1,0 +1,64 @@
+using ChipoBackend.Domain.Common;
+using ChipoBackend.Domain.ValueObjects;
+
+namespace ChipoBackend.Domain.Entities.Catalog;
+
+public class ProductVariant : BaseEntity
+{
+    public Guid ProductId { get; private set; }
+    public string Sku { get; private set; } = null!;
+    public string? Barcode { get; private set; }
+    public Dictionary<string, string> Attributes { get; private set; } = [];
+    public Money? Price { get; private set; }
+    public int StockQuantity { get; private set; }
+    public int MinStockThreshold { get; private set; } = 5;
+    public bool IsActive { get; private set; } = true;
+    public DateTime CreatedAt { get; private set; }
+    public DateTime UpdatedAt { get; private set; }
+
+    private ProductVariant() { }
+
+    public static ProductVariant Create(Guid productId, string sku, Dictionary<string, string> attributes, int initialStock, Money? price, int minStockThreshold)
+    {
+        return new ProductVariant
+        {
+            ProductId = productId,
+            Sku = sku,
+            Attributes = attributes,
+            StockQuantity = initialStock,
+            Price = price,
+            MinStockThreshold = minStockThreshold,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+    }
+
+    public void UpdatePrice(Money? price)
+    {
+        Price = price;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateStock(int newQuantity)
+    {
+        StockQuantity = newQuantity;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void IncrementStock(int quantity)
+    {
+        StockQuantity += quantity;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void DecrementStock(int quantity)
+    {
+        StockQuantity -= quantity;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public bool IsBelowMinStock => StockQuantity <= MinStockThreshold;
+
+    public void Deactivate() { IsActive = false; UpdatedAt = DateTime.UtcNow; }
+    public void Activate() { IsActive = true; UpdatedAt = DateTime.UtcNow; }
+}
