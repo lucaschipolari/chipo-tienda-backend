@@ -1,0 +1,61 @@
+## .NET / ASP.NET Core
+bin/
+obj/
+*.user
+*.suo
+*.vs/
+.vs/
+
+## Build output
+out/
+publish/
+
+## NuGet
+*.nupkg
+*.snupkg
+packages/
+!**/packages/repositories.config
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## Logs
+logs/
+*.log
+*.serilog
+
+## Secrets / environment
+appsettings.Production.json
+appsettings.Staging.json
+*.pfx
+*.p12
+secrets.json
+.env
+.env.*
+
+## EF Core — migrations are committed, but snapshots are generated
+# Keep migrations but ignore local EF tooling output
+*.Designer.cs.bak
+
+## Rider / JetBrains
+.idea/
+*.sln.iml
+
+## Visual Studio
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+
+## macOS
+.DS_Store
+
+## Windows
+Thumbs.db
+desktop.ini
+
+## Test results
+TestResults/
+coverage/
+*.coveragexml
+*.trx
