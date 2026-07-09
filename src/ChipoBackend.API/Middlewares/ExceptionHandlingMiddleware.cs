@@ -43,7 +43,12 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
             UnauthorizedAccessException => (StatusCodes.Status401Unauthorized,
                 new Dictionary<string, object> { { "message", "No autorizado." } }),
             _ => (StatusCodes.Status500InternalServerError,
-                new Dictionary<string, object> { { "message", "Ocurrió un error interno del servidor." } })
+                new Dictionary<string, object>
+                {
+                    { "message", "Ocurrió un error interno del servidor." },
+                    // TEMPORAL: detalle para diagnosticar el 500 al agregar imagen. Revertir.
+                    { "debug", exception.ToString() }
+                })
         };
 
         context.Response.StatusCode = statusCode;

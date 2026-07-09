@@ -114,10 +114,12 @@ public class Product : AuditableEntity
         return variant;
     }
 
-    public void AddImage(string url, string? altText = null, int displayOrder = 0)
+    public ProductImage AddImage(string url, string? altText = null, int displayOrder = 0)
     {
-        _images.Add(ProductImage.Create(Id, url, altText, displayOrder));
+        var image = ProductImage.Create(Id, url, altText, displayOrder);
+        _images.Add(image);
         UpdatedAt = DateTime.UtcNow;
+        return image;
     }
 
     public void RemoveImage(Guid imageId)

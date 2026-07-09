@@ -33,11 +33,13 @@ public class AddProductImageCommandHandler(
 
         // La nueva imagen va al final del orden actual.
         var nextOrder = product.Images.Count == 0 ? 0 : product.Images.Max(i => i.DisplayOrder) + 1;
-        product.AddImage(ImageUrlHelper.Normalize(request.Url), request.AltText, nextOrder);
+        var image = product.AddImage(ImageUrlHelper.Normalize(request.Url), request.AltText, nextOrder);
+
+        // Se registra explícitamente como Added (mismo patrón que AddProductVariant),
+        // sin depender de la detección por navegación de colección.
+        unitOfWork.Add(image);
 
         await unitOfWork.SaveChangesAsync(ct);
-
-        // Id de la imagen recién agregada (la de mayor DisplayOrder).
-        return product.Images.OrderByDescending(i => i.DisplayOrder).First().Id;
+        return image.Id;
     }
 }
