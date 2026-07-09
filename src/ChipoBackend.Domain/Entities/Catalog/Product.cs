@@ -17,6 +17,15 @@ public class Product : AuditableEntity
     public bool IsFeatured { get; private set; }
     public List<string> Tags { get; private set; } = [];
 
+    // ── Perfil olfativo (opcional) ──────────────────────────────────────────
+    public List<string> TopNotes { get; private set; } = [];      // notas de salida
+    public List<string> HeartNotes { get; private set; } = [];    // notas de corazón
+    public List<string> BaseNotes { get; private set; } = [];     // notas de fondo
+    public int? Intensity { get; private set; }                   // 1–5
+    public string? Longevity { get; private set; }                // ej "6-8 horas"
+    public List<string> Seasons { get; private set; } = [];       // Primavera, Verano, Otoño, Invierno
+    public List<string> Occasions { get; private set; } = [];     // Día, Noche, Formal, Casual
+
     public Category? Category { get; private set; }
 
     private readonly List<ProductVariant> _variants = [];
@@ -58,6 +67,22 @@ public class Product : AuditableEntity
         UpdatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>Setea el perfil olfativo. Listas nulas se tratan como vacías.</summary>
+    public void SetOlfactoryProfile(
+        List<string>? topNotes, List<string>? heartNotes, List<string>? baseNotes,
+        int? intensity, string? longevity,
+        List<string>? seasons, List<string>? occasions)
+    {
+        TopNotes = topNotes ?? [];
+        HeartNotes = heartNotes ?? [];
+        BaseNotes = baseNotes ?? [];
+        Intensity = intensity is >= 1 and <= 5 ? intensity : null;
+        Longevity = string.IsNullOrWhiteSpace(longevity) ? null : longevity.Trim();
+        Seasons = seasons ?? [];
+        Occasions = occasions ?? [];
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void Publish()
     {
         if (!_variants.Any())
@@ -78,12 +103,12 @@ public class Product : AuditableEntity
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public ProductVariant AddVariant(string sku, Dictionary<string, string> attributes, int initialStock = 0, Money? price = null, int minStockThreshold = 5)
+    public ProductVariant AddVariant(string sku, Dictionary<string, string> attributes, int initialStock = 0, Money? price = null, int minStockThreshold = 5, Money? compareAtPrice = null)
     {
         if (_variants.Any(v => v.Sku == sku))
             throw new BusinessRuleException("DuplicateVariantSku", $"El SKU '{sku}' ya existe en este producto.");
 
-        var variant = ProductVariant.Create(Id, sku, attributes, initialStock, price, minStockThreshold);
+        var variant = ProductVariant.Create(Id, sku, attributes, initialStock, price, minStockThreshold, compareAtPrice);
         _variants.Add(variant);
         UpdatedAt = DateTime.UtcNow;
         return variant;

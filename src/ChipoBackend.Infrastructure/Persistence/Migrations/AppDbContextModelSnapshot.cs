@@ -132,6 +132,10 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.PrimitiveCollection<List<string>>("BaseNotes")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
                     b.Property<Guid>("CategoryId")
                         .HasColumnType("uuid");
 
@@ -144,13 +148,32 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
+                    b.PrimitiveCollection<List<string>>("HeartNotes")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<int?>("Intensity")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("IsFeatured")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("Longevity")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.PrimitiveCollection<List<string>>("Occasions")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<List<string>>("Seasons")
+                        .IsRequired()
+                        .HasColumnType("text[]");
 
                     b.Property<string>("Sku")
                         .IsRequired()
@@ -168,6 +191,10 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(20)");
 
                     b.PrimitiveCollection<List<string>>("Tags")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<List<string>>("TopNotes")
                         .IsRequired()
                         .HasColumnType("text[]");
 
@@ -287,6 +314,10 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -299,7 +330,14 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(20)");
 
                     b.Property<string>("DocumentNumber")
-                        .HasColumnType("text");
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("DocumentType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<string>("Email")
                         .HasMaxLength(255)
@@ -319,10 +357,24 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.Property<string>("Notes")
-                        .HasColumnType("text");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("text");
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("PostalCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Province")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Street")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -334,6 +386,9 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DocumentNumber")
+                        .IsUnique();
 
                     b.ToTable("customers", "crm");
                 });
@@ -359,6 +414,107 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                     b.HasIndex("CustomerId");
 
                     b.ToTable("customer_addresses", "crm");
+                });
+
+            modelBuilder.Entity("ChipoBackend.Domain.Entities.Expenses.Expense", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Observations")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ReceiptUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("Pending");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("Date");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("expenses", "expenses");
+                });
+
+            modelBuilder.Entity("ChipoBackend.Domain.Entities.Expenses.ExpenseCategory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)")
+                        .HasDefaultValue("#6B7280");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("expense_categories", "expenses");
                 });
 
             modelBuilder.Entity("ChipoBackend.Domain.Entities.Finance.Expense", b =>
@@ -500,6 +656,20 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("BuyerEmail")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("BuyerName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("BuyerPhone")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<string>("CancelReason")
                         .HasColumnType("text");
 
@@ -515,11 +685,23 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("CreatedByUserId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("CustomerId")
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasDefaultValue("ARS")
+                        .HasColumnName("currency");
+
+                    b.Property<Guid?>("CustomerId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime?>("DeliveredAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeliveryMethod")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
                     b.Property<string>("Notes")
                         .HasColumnType("text");
@@ -531,6 +713,10 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PaymentMethod")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<DateTime?>("ShippedAt")
                         .HasColumnType("timestamp with time zone");
@@ -676,11 +862,37 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("CreatedByUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasDefaultValue("ARS");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<DateTime?>("EndsAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsStackable")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
 
                     b.Property<DateTime?>("StartsAt")
                         .HasColumnType("timestamp with time zone");
@@ -716,6 +928,30 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                     b.ToTable("coupons", "promotions");
                 });
 
+            modelBuilder.Entity("ChipoBackend.Domain.Entities.Promotions.CouponRestriction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CouponId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CouponId");
+
+                    b.ToTable("coupon_restrictions", "promotions");
+                });
+
             modelBuilder.Entity("ChipoBackend.Domain.Entities.Promotions.CouponUsage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -725,8 +961,11 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("CouponId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("CustomerId")
+                    b.Property<Guid?>("CustomerId")
                         .HasColumnType("uuid");
+
+                    b.Property<decimal>("DiscountAmount")
+                        .HasColumnType("decimal(12,2)");
 
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uuid");
@@ -758,19 +997,48 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("CreatedByUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasDefaultValue("ARS");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<DateTime?>("EndsAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsStackable")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
                     b.Property<int?>("MaxUsage")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("MinQuantity")
                         .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
+
+                    b.Property<int>("Priority")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
 
                     b.Property<DateTime?>("StartsAt")
                         .HasColumnType("timestamp with time zone");
@@ -801,6 +1069,125 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                     b.ToTable("discounts", "promotions");
                 });
 
+            modelBuilder.Entity("ChipoBackend.Domain.Entities.Promotions.Promotion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<TimeOnly?>("ActiveFrom")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<TimeOnly?>("ActiveUntil")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<string>("Badge")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int?>("BuyQuantity")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("ComboPrice")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasDefaultValue("ARS");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("DiscountType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<decimal>("DiscountValue")
+                        .HasColumnType("decimal(8,4)");
+
+                    b.Property<DateTime?>("EndsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("GetQuantity")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsStackable")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<decimal?>("MinOrderAmount")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<int>("Priority")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime>("StartsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("promotions", "promotions");
+                });
+
+            modelBuilder.Entity("ChipoBackend.Domain.Entities.Promotions.PromotionCategory", b =>
+                {
+                    b.Property<Guid>("PromotionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("PromotionId", "CategoryId");
+
+                    b.ToTable("promotion_categories", "promotions");
+                });
+
+            modelBuilder.Entity("ChipoBackend.Domain.Entities.Promotions.PromotionProduct", b =>
+                {
+                    b.Property<Guid>("PromotionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("PromotionId", "ProductId");
+
+                    b.ToTable("promotion_products", "promotions");
+                });
+
             modelBuilder.Entity("ChipoBackend.Domain.Entities.Purchasing.PurchaseOrder", b =>
                 {
                     b.Property<Guid>("Id")
@@ -813,11 +1200,17 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("CreatedByUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
                     b.Property<DateTime?>("ExpectedDeliveryDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Notes")
-                        .HasColumnType("text");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<string>("PurchaseNumber")
                         .IsRequired()
@@ -883,13 +1276,22 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("CompanyName")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
                     b.Property<string>("ContactName")
-                        .HasColumnType("text");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Country")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -898,22 +1300,35 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Email")
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
                     b.Property<string>("Notes")
-                        .HasColumnType("text");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<string>("PaymentTerms")
-                        .HasColumnType("text");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<string>("Phone")
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Province")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("TaxId")
-                        .HasColumnType("text");
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("TradeName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -921,9 +1336,90 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("UpdatedByUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Website")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.HasKey("Id");
 
                     b.ToTable("suppliers", "purchasing");
+                });
+
+            modelBuilder.Entity("ChipoBackend.Domain.Entities.Purchasing.SupplierContact", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("JobTitle")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid>("SupplierId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SupplierId");
+
+                    b.ToTable("supplier_contacts", "purchasing");
+                });
+
+            modelBuilder.Entity("ChipoBackend.Domain.Entities.Purchasing.SupplierProduct", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<bool>("IsPreferredSupplier")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("LeadTimeDays")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("PurchasePrice")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<Guid>("SupplierId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SupplierProductCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SupplierId", "ProductId")
+                        .IsUnique();
+
+                    b.ToTable("supplier_products", "purchasing");
                 });
 
             modelBuilder.Entity("ChipoBackend.Domain.Entities.Sales.Sale", b =>
@@ -1126,6 +1622,12 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("CreatedByUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("email");
+
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -1162,6 +1664,9 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.ToTable("users", "auth");
                 });
@@ -1210,10 +1715,9 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
 
                             b1.Property<string>("Currency")
                                 .IsRequired()
-                                .ValueGeneratedOnAdd()
                                 .HasMaxLength(3)
                                 .HasColumnType("character varying(3)")
-                                .HasDefaultValue("PEN")
+                                .HasDefaultValue("ARS")
                                 .HasColumnName("currency");
 
                             b1.HasKey("ProductId");
@@ -1291,6 +1795,29 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.OwnsOne("ChipoBackend.Domain.ValueObjects.Money", "CompareAtPrice", b1 =>
+                        {
+                            b1.Property<Guid>("ProductVariantId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("Amount")
+                                .HasColumnType("decimal(12,2)")
+                                .HasColumnName("compare_at_price");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasColumnName("compare_at_currency");
+
+                            b1.HasKey("ProductVariantId");
+
+                            b1.ToTable("product_variants", "catalog");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ProductVariantId");
+                        });
+
                     b.OwnsOne("ChipoBackend.Domain.ValueObjects.Money", "Price", b1 =>
                         {
                             b1.Property<Guid>("ProductVariantId")
@@ -1313,6 +1840,8 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                             b1.WithOwner()
                                 .HasForeignKey("ProductVariantId");
                         });
+
+                    b.Navigation("CompareAtPrice");
 
                     b.Navigation("Price");
                 });
@@ -1369,6 +1898,45 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ChipoBackend.Domain.Entities.Expenses.Expense", b =>
+                {
+                    b.HasOne("ChipoBackend.Domain.Entities.Expenses.ExpenseCategory", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.OwnsOne("ChipoBackend.Domain.ValueObjects.Money", "Amount", b1 =>
+                        {
+                            b1.Property<Guid>("ExpenseId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("Amount")
+                                .HasColumnType("decimal(18,4)")
+                                .HasColumnName("Amount_Amount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .ValueGeneratedOnAdd()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasDefaultValue("ARS")
+                                .HasColumnName("Amount_Currency");
+
+                            b1.HasKey("ExpenseId");
+
+                            b1.ToTable("expenses", "expenses");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ExpenseId");
+                        });
+
+                    b.Navigation("Amount")
+                        .IsRequired();
+
+                    b.Navigation("Category");
+                });
+
             modelBuilder.Entity("ChipoBackend.Domain.Entities.Finance.Expense", b =>
                 {
                     b.OwnsOne("ChipoBackend.Domain.ValueObjects.Money", "Amount", b1 =>
@@ -1385,7 +1953,7 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                                 .ValueGeneratedOnAdd()
                                 .HasMaxLength(3)
                                 .HasColumnType("character varying(3)")
-                                .HasDefaultValue("PEN")
+                                .HasDefaultValue("ARS")
                                 .HasColumnName("currency");
 
                             b1.HasKey("ExpenseId");
@@ -1453,10 +2021,9 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
 
                             b1.Property<string>("Currency")
                                 .IsRequired()
-                                .ValueGeneratedOnAdd()
                                 .HasMaxLength(3)
                                 .HasColumnType("character varying(3)")
-                                .HasDefaultValue("PEN")
+                                .HasDefaultValue("ARS")
                                 .HasColumnName("discount_amount_currency");
 
                             b1.HasKey("OrderId");
@@ -1518,10 +2085,9 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
 
                             b1.Property<string>("Currency")
                                 .IsRequired()
-                                .ValueGeneratedOnAdd()
                                 .HasMaxLength(3)
                                 .HasColumnType("character varying(3)")
-                                .HasDefaultValue("PEN")
+                                .HasDefaultValue("ARS")
                                 .HasColumnName("shipping_cost_currency");
 
                             b1.HasKey("OrderId");
@@ -1543,10 +2109,9 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
 
                             b1.Property<string>("Currency")
                                 .IsRequired()
-                                .ValueGeneratedOnAdd()
                                 .HasMaxLength(3)
                                 .HasColumnType("character varying(3)")
-                                .HasDefaultValue("PEN")
+                                .HasDefaultValue("ARS")
                                 .HasColumnName("subtotal_currency");
 
                             b1.HasKey("OrderId");
@@ -1568,10 +2133,9 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
 
                             b1.Property<string>("Currency")
                                 .IsRequired()
-                                .ValueGeneratedOnAdd()
                                 .HasMaxLength(3)
                                 .HasColumnType("character varying(3)")
-                                .HasDefaultValue("PEN")
+                                .HasDefaultValue("ARS")
                                 .HasColumnName("tax_amount_currency");
 
                             b1.HasKey("OrderId");
@@ -1593,10 +2157,9 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
 
                             b1.Property<string>("Currency")
                                 .IsRequired()
-                                .ValueGeneratedOnAdd()
                                 .HasMaxLength(3)
                                 .HasColumnType("character varying(3)")
-                                .HasDefaultValue("PEN")
+                                .HasDefaultValue("ARS")
                                 .HasColumnName("total_currency");
 
                             b1.HasKey("OrderId");
@@ -1812,6 +2375,15 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                     b.Navigation("MinOrderAmount");
                 });
 
+            modelBuilder.Entity("ChipoBackend.Domain.Entities.Promotions.CouponRestriction", b =>
+                {
+                    b.HasOne("ChipoBackend.Domain.Entities.Promotions.Coupon", null)
+                        .WithMany("Restrictions")
+                        .HasForeignKey("CouponId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ChipoBackend.Domain.Entities.Promotions.CouponUsage", b =>
                 {
                     b.HasOne("ChipoBackend.Domain.Entities.Promotions.Coupon", null)
@@ -1872,6 +2444,28 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                     b.Navigation("MaxDiscountAmount");
 
                     b.Navigation("MinOrderAmount");
+                });
+
+            modelBuilder.Entity("ChipoBackend.Domain.Entities.Promotions.PromotionCategory", b =>
+                {
+                    b.HasOne("ChipoBackend.Domain.Entities.Promotions.Promotion", "Promotion")
+                        .WithMany("Categories")
+                        .HasForeignKey("PromotionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Promotion");
+                });
+
+            modelBuilder.Entity("ChipoBackend.Domain.Entities.Promotions.PromotionProduct", b =>
+                {
+                    b.HasOne("ChipoBackend.Domain.Entities.Promotions.Promotion", "Promotion")
+                        .WithMany("Products")
+                        .HasForeignKey("PromotionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Promotion");
                 });
 
             modelBuilder.Entity("ChipoBackend.Domain.Entities.Purchasing.PurchaseOrder", b =>
@@ -2027,13 +2621,13 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                                 .IsRequired()
                                 .HasMaxLength(100)
                                 .HasColumnType("character varying(100)")
-                                .HasColumnName("city");
+                                .HasColumnName("address_city");
 
                             b1.Property<string>("Country")
                                 .IsRequired()
                                 .HasMaxLength(100)
                                 .HasColumnType("character varying(100)")
-                                .HasColumnName("country");
+                                .HasColumnName("address_country");
 
                             b1.Property<string>("PostalCode")
                                 .HasMaxLength(20)
@@ -2059,6 +2653,24 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                         });
 
                     b.Navigation("Address");
+                });
+
+            modelBuilder.Entity("ChipoBackend.Domain.Entities.Purchasing.SupplierContact", b =>
+                {
+                    b.HasOne("ChipoBackend.Domain.Entities.Purchasing.Supplier", null)
+                        .WithMany("Contacts")
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ChipoBackend.Domain.Entities.Purchasing.SupplierProduct", b =>
+                {
+                    b.HasOne("ChipoBackend.Domain.Entities.Purchasing.Supplier", null)
+                        .WithMany("Products")
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ChipoBackend.Domain.Entities.Sales.Sale", b =>
@@ -2257,34 +2869,6 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                     b.Navigation("Role");
                 });
 
-            modelBuilder.Entity("ChipoBackend.Domain.Entities.Users.User", b =>
-                {
-                    b.OwnsOne("ChipoBackend.Domain.ValueObjects.EmailAddress", "Email", b1 =>
-                        {
-                            b1.Property<Guid>("UserId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("Value")
-                                .IsRequired()
-                                .HasMaxLength(255)
-                                .HasColumnType("character varying(255)")
-                                .HasColumnName("email");
-
-                            b1.HasKey("UserId");
-
-                            b1.HasIndex("Value")
-                                .IsUnique();
-
-                            b1.ToTable("users", "auth");
-
-                            b1.WithOwner()
-                                .HasForeignKey("UserId");
-                        });
-
-                    b.Navigation("Email")
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("ChipoBackend.Domain.Entities.Users.UserRole", b =>
                 {
                     b.HasOne("ChipoBackend.Domain.Entities.Users.Role", "Role")
@@ -2334,12 +2918,28 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("ChipoBackend.Domain.Entities.Promotions.Coupon", b =>
                 {
+                    b.Navigation("Restrictions");
+
                     b.Navigation("Usages");
+                });
+
+            modelBuilder.Entity("ChipoBackend.Domain.Entities.Promotions.Promotion", b =>
+                {
+                    b.Navigation("Categories");
+
+                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("ChipoBackend.Domain.Entities.Purchasing.PurchaseOrder", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("ChipoBackend.Domain.Entities.Purchasing.Supplier", b =>
+                {
+                    b.Navigation("Contacts");
+
+                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("ChipoBackend.Domain.Entities.Sales.Sale", b =>

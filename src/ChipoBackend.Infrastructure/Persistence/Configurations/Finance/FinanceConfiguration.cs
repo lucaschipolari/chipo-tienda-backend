@@ -15,7 +15,7 @@ public class ExpenseConfiguration : IEntityTypeConfiguration<Expense>
         builder.OwnsOne(e => e.Amount, m =>
         {
             m.Property(x => x.Amount).HasColumnName("amount").HasColumnType("decimal(12,2)");
-            m.Property(x => x.Currency).HasColumnName("currency").HasMaxLength(3).HasDefaultValue("PEN");
+            m.Property(x => x.Currency).HasColumnName("currency").HasMaxLength(3).HasDefaultValue("ARS");
         });
         builder.Ignore(e => e.DomainEvents);
     }

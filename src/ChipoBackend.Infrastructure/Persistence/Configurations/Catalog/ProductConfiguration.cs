@@ -18,10 +18,19 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(p => p.Status).HasConversion<string>().HasMaxLength(20);
         builder.Property(p => p.Tags).HasColumnType("text[]");
 
+        // Perfil olfativo
+        builder.Property(p => p.TopNotes).HasColumnType("text[]");
+        builder.Property(p => p.HeartNotes).HasColumnType("text[]");
+        builder.Property(p => p.BaseNotes).HasColumnType("text[]");
+        builder.Property(p => p.Intensity);
+        builder.Property(p => p.Longevity).HasMaxLength(50);
+        builder.Property(p => p.Seasons).HasColumnType("text[]");
+        builder.Property(p => p.Occasions).HasColumnType("text[]");
+
         builder.OwnsOne(p => p.BasePrice, money =>
         {
             money.Property(m => m.Amount).HasColumnName("base_price").HasColumnType("decimal(12,2)").IsRequired();
-            money.Property(m => m.Currency).HasColumnName("currency").HasMaxLength(3).HasDefaultValue("PEN");
+            money.Property(m => m.Currency).HasColumnName("currency").HasMaxLength(3).HasDefaultValue("ARS").ValueGeneratedNever();
         });
 
         builder.OwnsOne(p => p.CompareAtPrice, money =>
@@ -55,6 +64,12 @@ public class ProductVariantConfiguration : IEntityTypeConfiguration<ProductVaria
         {
             money.Property(m => m.Amount).HasColumnName("price").HasColumnType("decimal(12,2)");
             money.Property(m => m.Currency).HasColumnName("price_currency").HasMaxLength(3);
+        });
+
+        builder.OwnsOne(v => v.CompareAtPrice, money =>
+        {
+            money.Property(m => m.Amount).HasColumnName("compare_at_price").HasColumnType("decimal(12,2)");
+            money.Property(m => m.Currency).HasColumnName("compare_at_currency").HasMaxLength(3);
         });
 
         builder.Ignore(v => v.DomainEvents);

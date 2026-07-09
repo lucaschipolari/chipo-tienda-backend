@@ -1,0 +1,40 @@
+namespace ChipoBackend.Application.Features.Promotions.DTOs;
+
+public record DiscountListItemDto(
+    Guid Id,
+    string Name,
+    string? Description,
+    string Type,
+    string AppliesTo,
+    decimal Value,
+    string Currency,
+    bool IsActive,
+    bool IsStackable,
+    int Priority,
+    DateTime? StartsAt,
+    DateTime? EndsAt,
+    int UsageCount,
+    int? MaxUsage,
+    DateTime CreatedAt);
+
+public record DiscountDetailDto(
+    Guid Id,
+    string Name,
+    string? Description,
+    string Type,
+    string AppliesTo,
+    decimal Value,
+    string Currency,
+    List<Guid> TargetIds,
+    decimal? MinOrderAmount,
+    decimal? MaxDiscountAmount,
+    int? MinQuantity,
+    bool IsActive,
+    bool IsStackable,
+    int Priority,
+    int? MaxUsage,
+    DateTime? StartsAt,
+    DateTime? EndsAt,
+    int UsageCount,
+    DateTime CreatedAt,
+    DateTime UpdatedAt);

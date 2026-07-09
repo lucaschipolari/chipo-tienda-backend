@@ -16,7 +16,9 @@ public class RegisterCommandHandler(
 {
     public async Task<RegisterResponse> Handle(RegisterCommand request, CancellationToken ct)
     {
-        if (await userRepository.ExistsAsync(u => u.Email.Value == request.Email.ToLowerInvariant(), ct))
+        // ExistsAsync con u.Email.Value no puede traducirse a SQL con HasConversion.
+        // GetByEmailAsync usa u.Email == EmailAddress.Of(email), que sí se traduce.
+        if (await userRepository.GetByEmailAsync(request.Email.ToLowerInvariant(), ct) != null)
             throw new ConflictException($"El email '{request.Email}' ya está registrado.");
 
         var passwordHash = passwordService.Hash(request.Password);

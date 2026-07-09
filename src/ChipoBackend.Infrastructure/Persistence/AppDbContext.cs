@@ -2,6 +2,7 @@ using ChipoBackend.Domain.Entities.Audit;
 using ChipoBackend.Domain.Entities.Catalog;
 using ChipoBackend.Domain.Entities.Customers;
 using ChipoBackend.Domain.Entities.Finance;
+using ExpensesNs = ChipoBackend.Domain.Entities.Expenses;
 using ChipoBackend.Domain.Entities.Inventory;
 using ChipoBackend.Domain.Entities.Orders;
 using ChipoBackend.Domain.Entities.Promotions;
@@ -49,6 +50,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     // Purchasing
     public DbSet<Supplier> Suppliers => Set<Supplier>();
+    public DbSet<SupplierContact> SupplierContacts => Set<SupplierContact>();
+    public DbSet<SupplierProduct> SupplierProducts => Set<SupplierProduct>();
     public DbSet<PurchaseOrder> PurchaseOrders => Set<PurchaseOrder>();
     public DbSet<PurchaseOrderItem> PurchaseOrderItems => Set<PurchaseOrderItem>();
 
@@ -56,9 +59,17 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Discount> Discounts => Set<Discount>();
     public DbSet<Coupon> Coupons => Set<Coupon>();
     public DbSet<CouponUsage> CouponUsages => Set<CouponUsage>();
+    public DbSet<Promotion> Promotions => Set<Promotion>();
+    public DbSet<PromotionProduct> PromotionProducts => Set<PromotionProduct>();
+    public DbSet<PromotionCategory> PromotionCategories => Set<PromotionCategory>();
+    public DbSet<CouponRestriction> CouponRestrictions => Set<CouponRestriction>();
 
     // Finance
     public DbSet<Expense> Expenses => Set<Expense>();
+
+    // Expenses (Gastos module)
+    public DbSet<ExpensesNs.ExpenseCategory> ExpenseCategories => Set<ExpensesNs.ExpenseCategory>();
+    public DbSet<ExpensesNs.Expense> GastosExpenses => Set<ExpensesNs.Expense>();
 
     // Audit
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();

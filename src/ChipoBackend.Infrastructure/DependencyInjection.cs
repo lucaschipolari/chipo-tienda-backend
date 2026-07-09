@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using Npgsql;
 
 namespace ChipoBackend.Infrastructure;
 
@@ -22,14 +23,26 @@ public static class DependencyInjection
         // Interceptors
         services.AddScoped<AuditSaveChangesInterceptor>();
 
+        // NpgsqlDataSource con soporte para Dictionary<string,string> como JSONB
+        // Requerido en Npgsql 8+ para serialización dinámica de tipos genéricos.
+        var dataSourceBuilder = new NpgsqlDataSourceBuilder(
+            configuration.GetConnectionString("DefaultConnection"));
+        dataSourceBuilder.EnableDynamicJson();
+        var npgsqlDataSource = dataSourceBuilder.Build();
+
         // DbContext
         services.AddDbContext<AppDbContext>((sp, options) =>
         {
             options.UseNpgsql(
-                configuration.GetConnectionString("DefaultConnection"),
+                npgsqlDataSource,
                 npgsql => npgsql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName));
 
             options.AddInterceptors(sp.GetRequiredService<AuditSaveChangesInterceptor>());
+
+            // Activar en Development para ver el SQL exacto en los logs
+            var env = sp.GetService<Microsoft.AspNetCore.Hosting.IWebHostEnvironment>();
+            if (env?.EnvironmentName == "Development")
+                options.EnableSensitiveDataLogging().EnableDetailedErrors();
         });
 
         // Unit of Work
@@ -43,10 +56,15 @@ public static class DependencyInjection
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<ICouponRepository, CouponRepository>();
+        services.AddScoped<IDiscountRepository, DiscountRepository>();
+        services.AddScoped<IPromotionRepository, PromotionRepository>();
         services.AddScoped<ISupplierRepository, SupplierRepository>();
         services.AddScoped<IPurchaseOrderRepository, PurchaseOrderRepository>();
         services.AddScoped<IStockMovementRepository, StockMovementRepository>();
+        services.AddScoped<ISaleRepository, SaleRepository>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+        services.AddScoped<IExpenseCategoryRepository, ExpenseCategoryRepository>();
+        services.AddScoped<IExpenseRepository, ExpenseRepository>();
 
         // Auth services
         services.AddScoped<IJwtService, JwtService>();
@@ -54,8 +72,12 @@ public static class DependencyInjection
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
 
+        services.AddScoped<IPromotionEngine, PromotionEngine>();
+
         // Other services
         services.AddScoped<IAuditService, AuditService>();
+        services.AddScoped<IReportExporter, ReportExporter>();
+        services.AddScoped<IReportExportService, ReportExportService>();
 
         // JWT Authentication
         var jwtSecret = configuration["Jwt:Secret"]

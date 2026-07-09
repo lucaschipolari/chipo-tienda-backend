@@ -8,7 +8,7 @@ public sealed class Money : ValueObject
     public decimal Amount { get; }
     public string Currency { get; }
 
-    private Money() { Amount = 0; Currency = "PEN"; }
+    private Money() { Amount = 0; Currency = "ARS"; }
 
     private Money(decimal amount, string currency)
     {
@@ -16,7 +16,7 @@ public sealed class Money : ValueObject
         Currency = currency.ToUpperInvariant();
     }
 
-    public static Money Of(decimal amount, string currency = "PEN")
+    public static Money Of(decimal amount, string currency = "ARS")
     {
         if (amount < 0)
             throw new DomainException("El monto no puede ser negativo.");
@@ -25,7 +25,7 @@ public sealed class Money : ValueObject
         return new Money(amount, currency);
     }
 
-    public static Money Zero(string currency = "PEN") => new(0, currency);
+    public static Money Zero(string currency = "ARS") => new(0, currency);
 
     public Money Add(Money other)
     {

@@ -21,12 +21,19 @@ public class ProductRepository(AppDbContext context) : BaseRepository<Product>(c
         int page, int pageSize, Guid? categoryId = null, string? search = null,
         ProductStatus? status = null, CancellationToken ct = default)
     {
-        var query = DbSet.Include(p => p.Variants).Include(p => p.Images).AsQueryable();
+        var query = DbSet.Include(p => p.Variants).Include(p => p.Images).Include(p => p.Category).AsQueryable();
 
         if (categoryId.HasValue) query = query.Where(p => p.CategoryId == categoryId);
         if (status.HasValue) query = query.Where(p => p.Status == status);
         if (!string.IsNullOrWhiteSpace(search))
-            query = query.Where(p => p.Name.Contains(search) || p.Sku.Contains(search) || p.Tags.Contains(search));
+        {
+            // ILIKE → búsqueda insensible a mayúsculas ("PEPE" encuentra "pepe")
+            var pattern = $"%{search.Trim()}%";
+            query = query.Where(p =>
+                EF.Functions.ILike(p.Name, pattern) ||
+                EF.Functions.ILike(p.Sku, pattern) ||
+                p.Tags.Any(t => EF.Functions.ILike(t, pattern)));
+        }
 
         var total = await query.CountAsync(ct);
         var items = await query.OrderByDescending(p => p.CreatedAt)

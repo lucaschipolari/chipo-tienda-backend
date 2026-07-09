@@ -10,7 +10,17 @@ public class Customer : AuditableEntity
     public string LastName { get; private set; } = null!;
     public string? Email { get; private set; }
     public string? PhoneNumber { get; private set; }
-    public string? DocumentNumber { get; private set; }
+
+    // Documento
+    public string DocumentNumber { get; private set; } = null!;
+    public DocumentType DocumentType { get; private set; } = DocumentType.DNI;
+
+    // Dirección principal
+    public string? Street { get; private set; }
+    public string? City { get; private set; }
+    public string? Province { get; private set; }
+    public string? PostalCode { get; private set; }
+
     public CustomerType CustomerType { get; private set; } = CustomerType.Retail;
     public bool IsActive { get; private set; } = true;
     public string? Notes { get; private set; }
@@ -22,27 +32,43 @@ public class Customer : AuditableEntity
 
     private Customer() { }
 
-    public static Customer Create(string firstName, string lastName, string? email = null, string? phoneNumber = null, Guid? userId = null)
+    public static Customer Create(
+        string firstName, string lastName,
+        string documentNumber, DocumentType documentType,
+        string? email = null, string? phoneNumber = null,
+        Guid? userId = null)
     {
         return new Customer
         {
             FirstName = firstName,
             LastName = lastName,
+            DocumentNumber = documentNumber,
+            DocumentType = documentType,
             Email = email,
             PhoneNumber = phoneNumber,
             UserId = userId,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
         };
     }
 
-    public void Update(string firstName, string lastName, string? email, string? phoneNumber, string? documentNumber, CustomerType type, string? notes)
+    public void Update(
+        string firstName, string lastName,
+        string documentNumber, DocumentType documentType,
+        string? email, string? phoneNumber,
+        string? street, string? city, string? province, string? postalCode,
+        CustomerType type, string? notes)
     {
         FirstName = firstName;
         LastName = lastName;
+        DocumentNumber = documentNumber;
+        DocumentType = documentType;
         Email = email;
         PhoneNumber = phoneNumber;
-        DocumentNumber = documentNumber;
+        Street = street;
+        City = city;
+        Province = province;
+        PostalCode = postalCode;
         CustomerType = type;
         Notes = notes;
         UpdatedAt = DateTime.UtcNow;
@@ -59,7 +85,8 @@ public class Customer : AuditableEntity
     }
 
     public void Deactivate() { IsActive = false; UpdatedAt = DateTime.UtcNow; }
-    public void Activate() { IsActive = true; UpdatedAt = DateTime.UtcNow; }
+    public void Activate()   { IsActive = true;  UpdatedAt = DateTime.UtcNow; }
 }
 
-public enum CustomerType { Retail, Wholesale }
+public enum CustomerType   { Retail, Wholesale }
+public enum DocumentType   { DNI, RUC, CE, Pasaporte }

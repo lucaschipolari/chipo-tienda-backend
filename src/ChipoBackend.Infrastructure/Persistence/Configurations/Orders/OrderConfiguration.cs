@@ -14,6 +14,15 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.HasIndex(o => o.OrderNumber).IsUnique();
         builder.Property(o => o.Status).HasConversion<string>().HasMaxLength(30);
 
+        builder.Property(o => o.CustomerId).IsRequired(false);
+
+        builder.Property(o => o.BuyerName).HasMaxLength(200).IsRequired();
+        builder.Property(o => o.BuyerEmail).HasMaxLength(255).IsRequired();
+        builder.Property(o => o.BuyerPhone).HasMaxLength(20).IsRequired(false);
+        builder.Property(o => o.PaymentMethod).HasMaxLength(50).IsRequired(false);
+        builder.Property(o => o.DeliveryMethod).HasMaxLength(30).IsRequired(false);
+        builder.Property(o => o.Currency).HasColumnName("currency").HasMaxLength(3).IsRequired().HasDefaultValue("ARS");
+
         builder.OwnsOne(o => o.ShippingAddress, addr =>
         {
             addr.Property(a => a.Street).HasColumnName("shipping_street");
@@ -52,7 +61,11 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.OwnsOne(nav, m =>
         {
             m.Property(x => x.Amount).HasColumnName(columnPrefix).HasColumnType("decimal(12,2)");
-            m.Property(x => x.Currency).HasColumnName($"{columnPrefix}_currency").HasMaxLength(3).HasDefaultValue("PEN");
+            m.Property(x => x.Currency)
+                .HasColumnName($"{columnPrefix}_currency")
+                .HasMaxLength(3)
+                .HasDefaultValue("ARS")
+                .ValueGeneratedNever(); // prevent EF from treating this as a DB-generated column
         });
     }
 }

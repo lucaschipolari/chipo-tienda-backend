@@ -15,13 +15,14 @@ public class PurchaseOrder : AuditableEntity
     public Money TaxAmount { get; private set; } = null!;
     public Money Total { get; private set; } = null!;
     public string? Notes { get; private set; }
+    public string Currency { get; private set; } = "ARS";
 
     private readonly List<PurchaseOrderItem> _items = [];
     public IReadOnlyCollection<PurchaseOrderItem> Items => _items.AsReadOnly();
 
     private PurchaseOrder() { }
 
-    public static PurchaseOrder Create(string purchaseNumber, Guid supplierId, Guid? createdByUser, DateTime? expectedDate = null)
+    public static PurchaseOrder Create(string purchaseNumber, Guid supplierId, Guid? createdByUser, DateTime? expectedDate = null, string currency = "ARS")
     {
         return new PurchaseOrder
         {
@@ -29,9 +30,10 @@ public class PurchaseOrder : AuditableEntity
             SupplierId = supplierId,
             CreatedByUserId = createdByUser,
             ExpectedDeliveryDate = expectedDate,
-            Subtotal = Money.Zero(),
-            TaxAmount = Money.Zero(),
-            Total = Money.Zero(),
+            Currency = currency,
+            Subtotal = Money.Zero(currency),
+            TaxAmount = Money.Zero(currency),
+            Total = Money.Zero(currency),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -54,10 +56,17 @@ public class PurchaseOrder : AuditableEntity
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void Approve()
+    {
+        EnsureStatus(PurchaseOrderStatus.Sent);
+        Status = PurchaseOrderStatus.Approved;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void ReceiveItems(Dictionary<Guid, int> itemReceipts)
     {
-        if (Status != PurchaseOrderStatus.Sent && Status != PurchaseOrderStatus.PartiallyReceived)
-            throw new BusinessRuleException("InvalidPurchaseStatus", "Solo se puede recibir una orden enviada o parcialmente recibida.");
+        if (Status != PurchaseOrderStatus.Sent && Status != PurchaseOrderStatus.Approved && Status != PurchaseOrderStatus.PartiallyReceived)
+            throw new BusinessRuleException("InvalidPurchaseStatus", "Solo se puede recibir una orden enviada, aprobada o parcialmente recibida.");
 
         foreach (var (itemId, quantityReceived) in itemReceipts)
         {
@@ -82,7 +91,7 @@ public class PurchaseOrder : AuditableEntity
 
     private void RecalculateTotals()
     {
-        Subtotal = _items.Aggregate(Money.Zero(), (acc, i) => acc + i.Total);
+        Subtotal = _items.Aggregate(Money.Zero(Currency), (acc, i) => acc + i.Total);
         Total = Subtotal + TaxAmount;
         UpdatedAt = DateTime.UtcNow;
     }
@@ -94,4 +103,4 @@ public class PurchaseOrder : AuditableEntity
     }
 }
 
-public enum PurchaseOrderStatus { Draft, Sent, PartiallyReceived, Received, Cancelled }
+public enum PurchaseOrderStatus { Draft, Sent, Approved, PartiallyReceived, Received, Cancelled }

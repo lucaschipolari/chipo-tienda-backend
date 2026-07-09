@@ -16,10 +16,14 @@ public class RevokeTokenCommandHandler(
 {
     public async Task Handle(RevokeTokenCommand request, CancellationToken ct)
     {
-        var user = await userRepository.GetByRefreshTokenAsync(request.RefreshToken, ct)
+        // GetByRefreshTokenAsync busca por hash en la BD.
+        // El cliente envía el token crudo — hay que hashear antes de consultar.
+        var tokenHash = jwtService.HashRefreshToken(request.RefreshToken);
+        var user = await userRepository.GetByRefreshTokenAsync(tokenHash, ct)
             ?? throw new NotFoundException("Token no encontrado.");
 
-        var token = user.RefreshTokens.FirstOrDefault(t => jwtService.ValidateRefreshTokenHash(request.RefreshToken, t.TokenHash))
+        var token = user.RefreshTokens.FirstOrDefault(t =>
+            jwtService.ValidateRefreshTokenHash(request.RefreshToken, t.TokenHash))
             ?? throw new NotFoundException("Token no encontrado.");
 
         if (!token.IsActive)

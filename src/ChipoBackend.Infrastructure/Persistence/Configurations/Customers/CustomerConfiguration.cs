@@ -10,12 +10,30 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
     {
         builder.ToTable("customers", "crm");
         builder.HasKey(c => c.Id);
+
         builder.Property(c => c.FirstName).HasMaxLength(100).IsRequired();
         builder.Property(c => c.LastName).HasMaxLength(100).IsRequired();
         builder.Property(c => c.Email).HasMaxLength(255);
-        builder.Property(c => c.CustomerType).HasConversion<string>().HasMaxLength(20);
+        builder.Property(c => c.PhoneNumber).HasMaxLength(20);
+
+        builder.Property(c => c.DocumentNumber).HasMaxLength(20).IsRequired();
+        builder.Property(c => c.DocumentType)
+            .HasConversion<string>().HasMaxLength(20).IsRequired();
+        builder.HasIndex(c => c.DocumentNumber).IsUnique();
+
+        builder.Property(c => c.Street).HasMaxLength(300);
+        builder.Property(c => c.City).HasMaxLength(100);
+        builder.Property(c => c.Province).HasMaxLength(100);
+        builder.Property(c => c.PostalCode).HasMaxLength(20);
+
+        builder.Property(c => c.CustomerType)
+            .HasConversion<string>().HasMaxLength(20);
+
+        builder.Property(c => c.Notes).HasMaxLength(1000);
+
         builder.HasMany(c => c.Addresses).WithOne().HasForeignKey(a => a.CustomerId);
         builder.Ignore(c => c.DomainEvents);
+        builder.Ignore(c => c.FullName);
     }
 }
 

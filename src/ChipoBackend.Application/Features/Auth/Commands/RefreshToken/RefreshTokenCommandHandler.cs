@@ -15,11 +15,15 @@ public class RefreshTokenCommandHandler(
 {
     public async Task<LoginResponse> Handle(RefreshTokenCommand request, CancellationToken ct)
     {
-        var (_, hash, _) = jwtService.GenerateRefreshToken(); // use validation only
-        var user = await userRepository.GetByRefreshTokenAsync(request.RefreshToken, ct)
+        // GetByRefreshTokenAsync busca por hash en la BD.
+        // El cliente envía el token crudo — hay que hashear antes de consultar.
+        var tokenHash = jwtService.HashRefreshToken(request.RefreshToken);
+        var user = await userRepository.GetByRefreshTokenAsync(tokenHash, ct)
             ?? throw new NotFoundException("Token de refresco inválido.");
 
-        var existingToken = user.RefreshTokens.FirstOrDefault(t => jwtService.ValidateRefreshTokenHash(request.RefreshToken, t.TokenHash));
+        var existingToken = user.RefreshTokens.FirstOrDefault(t =>
+            jwtService.ValidateRefreshTokenHash(request.RefreshToken, t.TokenHash));
+
         if (existingToken == null || !existingToken.IsActive)
             throw new ForbiddenException("El token de refresco ha expirado o fue revocado.");
 
@@ -28,7 +32,8 @@ public class RefreshTokenCommandHandler(
         var (newRefreshTokenValue, newRefreshTokenHash, expiresAt) = jwtService.GenerateRefreshToken();
 
         user.RevokeRefreshToken(existingToken.TokenHash, "replaced");
-        user.AddRefreshToken(newRefreshTokenHash, expiresAt, request.IpAddress);
+        var newToken = user.AddRefreshToken(newRefreshTokenHash, expiresAt, request.IpAddress);
+        unitOfWork.Add(newToken);
 
         await unitOfWork.SaveChangesAsync(ct);
 

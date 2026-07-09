@@ -1,9 +1,7 @@
 using ChipoBackend.Application.Common.Models;
 using ChipoBackend.Application.Features.Users.DTOs;
-using ChipoBackend.Domain.Entities.Users;
 using ChipoBackend.Domain.Interfaces.Repositories;
 using MediatR;
-using System.Linq.Expressions;
 
 namespace ChipoBackend.Application.Features.Users.Queries.GetUsers;
 
@@ -12,22 +10,24 @@ public class GetUsersQueryHandler(IUserRepository userRepository)
 {
     public async Task<PagedResult<UserListItemDto>> Handle(GetUsersQuery request, CancellationToken ct)
     {
-        Expression<Func<User, bool>> filter = request.Search == null
-            ? _ => true
-            : u => u.FirstName.Contains(request.Search) || u.LastName.Contains(request.Search) || u.Email.Value.Contains(request.Search);
+        // GetPagedAsync aplica filtro en DB con EF.Property para el email
+        // (evita el problema de HasConversion con u.Email.Value en LINQ-to-SQL)
+        var (users, total) = await userRepository.GetPagedAsync(
+            request.Search,
+            request.Page,
+            request.PageSize,
+            ct);
 
-        var users = await userRepository.FindAsync(filter, ct);
-        var total = users.Count;
-        var paged = users
-            .Skip((request.Page - 1) * request.PageSize)
-            .Take(request.PageSize)
+        var dtos = users
             .Select(u => new UserListItemDto(
-                u.Id, u.Email.Value, u.FullName,
+                u.Id,
+                u.Email.Value,   // .Value se usa en memoria, no en SQL — seguro
+                u.FullName,
                 u.Status.ToString(),
                 u.Roles.Select(r => r.Role?.Name ?? "").ToList(),
                 u.CreatedAt))
             .ToList();
 
-        return PagedResult<UserListItemDto>.Create(paged, total, request.Page, request.PageSize);
+        return PagedResult<UserListItemDto>.Create(dtos, total, request.Page, request.PageSize);
     }
 }

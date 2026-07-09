@@ -20,7 +20,7 @@ public class Sale : AuditableEntity
 
     private Sale() { }
 
-    public static Sale Create(string saleNumber, Guid soldByUserId, string paymentMethod, SaleChannel channel, Guid? customerId = null, string? notes = null)
+    public static Sale Create(string saleNumber, Guid soldByUserId, string paymentMethod, SaleChannel channel, string currency = "ARS", Guid? customerId = null, string? notes = null)
     {
         return new Sale
         {
@@ -30,9 +30,9 @@ public class Sale : AuditableEntity
             Channel = channel,
             PaymentMethod = paymentMethod,
             Notes = notes,
-            Subtotal = Money.Zero(),
-            DiscountAmount = Money.Zero(),
-            Total = Money.Zero(),
+            Subtotal = Money.Zero(currency),
+            DiscountAmount = Money.Zero(currency),
+            Total = Money.Zero(currency),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -46,7 +46,8 @@ public class Sale : AuditableEntity
 
     private void RecalculateTotals()
     {
-        Subtotal = _items.Aggregate(Money.Zero(), (acc, i) => acc + i.Total);
+        var currency = Subtotal.Currency;
+        Subtotal = _items.Aggregate(Money.Zero(currency), (acc, i) => acc + i.Total);
         Total = Subtotal - DiscountAmount;
         UpdatedAt = DateTime.UtcNow;
     }

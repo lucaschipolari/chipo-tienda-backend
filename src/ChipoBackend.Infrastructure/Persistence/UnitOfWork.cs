@@ -10,6 +10,10 @@ public class UnitOfWork(AppDbContext context) : IUnitOfWork
     public async Task<int> SaveChangesAsync(CancellationToken ct = default) =>
         await context.SaveChangesAsync(ct);
 
+    // context.Add<T> sets EntityState = Added regardless of key value,
+    // ensuring EF Core generates INSERT rather than UPDATE.
+    public void Add<T>(T entity) where T : class => context.Add(entity);
+
     public async Task BeginTransactionAsync(CancellationToken ct = default) =>
         _transaction = await context.Database.BeginTransactionAsync(ct);
 

@@ -10,6 +10,7 @@ public class ProductVariant : BaseEntity
     public string? Barcode { get; private set; }
     public Dictionary<string, string> Attributes { get; private set; } = [];
     public Money? Price { get; private set; }
+    public Money? CompareAtPrice { get; private set; }   // precio tachado (descuento) por variante
     public int StockQuantity { get; private set; }
     public int MinStockThreshold { get; private set; } = 5;
     public bool IsActive { get; private set; } = true;
@@ -18,7 +19,7 @@ public class ProductVariant : BaseEntity
 
     private ProductVariant() { }
 
-    public static ProductVariant Create(Guid productId, string sku, Dictionary<string, string> attributes, int initialStock, Money? price, int minStockThreshold)
+    public static ProductVariant Create(Guid productId, string sku, Dictionary<string, string> attributes, int initialStock, Money? price, int minStockThreshold, Money? compareAtPrice = null)
     {
         return new ProductVariant
         {
@@ -27,6 +28,7 @@ public class ProductVariant : BaseEntity
             Attributes = attributes,
             StockQuantity = initialStock,
             Price = price,
+            CompareAtPrice = compareAtPrice,
             MinStockThreshold = minStockThreshold,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -36,6 +38,12 @@ public class ProductVariant : BaseEntity
     public void UpdatePrice(Money? price)
     {
         Price = price;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateCompareAtPrice(Money? compareAtPrice)
+    {
+        CompareAtPrice = compareAtPrice;
         UpdatedAt = DateTime.UtcNow;
     }
 

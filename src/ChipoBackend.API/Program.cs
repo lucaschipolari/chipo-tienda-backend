@@ -1,4 +1,5 @@
 using ChipoBackend.API.Middlewares;
+using ChipoBackend.API.ModelBinders;
 using ChipoBackend.Application;
 using ChipoBackend.Infrastructure;
 using Microsoft.OpenApi.Models;
@@ -18,7 +19,14 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 // API
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    // Npgsql requiere DateTime con Kind=Utc para columnas timestamptz
+    options.ModelBinderProviders.Insert(0, new UtcDateTimeModelBinderProvider());
+}).AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new UtcDateTimeJsonConverter());
+});
 builder.Services.AddEndpointsApiExplorer();
 
 // Swagger with JWT support
@@ -80,5 +88,13 @@ app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// ── Seed de base de datos ──────────────────────────────────────────────────────
+using (var scope = app.Services.CreateScope())
+{
+    var db     = scope.ServiceProvider.GetRequiredService<ChipoBackend.Infrastructure.Persistence.AppDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    await ChipoBackend.Infrastructure.Persistence.DbInitializer.SeedAsync(db, logger);
+}
 
 app.Run();

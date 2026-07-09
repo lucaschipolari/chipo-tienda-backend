@@ -7,4 +7,10 @@ public interface IJwtService
     string GenerateAccessToken(User user, IEnumerable<string> roles);
     (string Token, string Hash, DateTime ExpiresAt) GenerateRefreshToken();
     bool ValidateRefreshTokenHash(string token, string hash);
+
+    /// <summary>
+    /// Devuelve el hash SHA-256 del token crudo.
+    /// Usar antes de llamar a GetByRefreshTokenAsync, que busca por hash en la BD.
+    /// </summary>
+    string HashRefreshToken(string rawToken);
 }

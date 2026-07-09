@@ -48,6 +48,8 @@ public class JwtService(IConfiguration configuration) : IJwtService
     public bool ValidateRefreshTokenHash(string token, string hash) =>
         HashToken(token) == hash;
 
+    public string HashRefreshToken(string rawToken) => HashToken(rawToken);
+
     private static string HashToken(string token)
     {
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(token));

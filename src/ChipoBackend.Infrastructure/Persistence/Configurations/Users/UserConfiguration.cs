@@ -1,4 +1,5 @@
 using ChipoBackend.Domain.Entities.Users;
+using ChipoBackend.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -11,11 +12,18 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.ToTable("users", "auth");
         builder.HasKey(u => u.Id);
 
-        builder.OwnsOne(u => u.Email, email =>
-        {
-            email.Property(e => e.Value).HasColumnName("email").HasMaxLength(255).IsRequired();
-            email.HasIndex(e => e.Value).IsUnique();
-        });
+        // Use HasConversion instead of OwnsOne to avoid EF Core 9 generating a separate
+        // UPDATE command for the owned entity entry, which caused DbUpdateConcurrencyException
+        // (expected 1 row, affected 0 rows) when saving a Modified User entity.
+        builder.Property(u => u.Email)
+            .HasConversion(
+                email => email.Value,
+                value => EmailAddress.Of(value))
+            .HasColumnName("email")
+            .HasMaxLength(255)
+            .IsRequired();
+
+        builder.HasIndex(u => u.Email).IsUnique();
 
         builder.Property(u => u.PasswordHash).IsRequired();
         builder.Property(u => u.FirstName).HasMaxLength(100).IsRequired();

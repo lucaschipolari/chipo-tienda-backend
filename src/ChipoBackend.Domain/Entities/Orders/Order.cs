@@ -8,8 +8,15 @@ namespace ChipoBackend.Domain.Entities.Orders;
 public class Order : AuditableEntity
 {
     public string OrderNumber { get; private set; } = null!;
-    public Guid CustomerId { get; private set; }
+    public string Currency { get; private set; } = "ARS";
+    public Guid? CustomerId { get; private set; }
     public OrderStatus Status { get; private set; } = OrderStatus.Pending;
+
+    public string BuyerName { get; private set; } = null!;
+    public string BuyerEmail { get; private set; } = null!;
+    public string? BuyerPhone { get; private set; }
+    public string? PaymentMethod { get; private set; }
+    public string? DeliveryMethod { get; private set; }
 
     public Address ShippingAddress { get; private set; } = null!;
     public Address? BillingAddress { get; private set; }
@@ -40,19 +47,35 @@ public class Order : AuditableEntity
 
     private Order() { }
 
-    public static Order Create(string orderNumber, Guid customerId, Address shippingAddress, string? notes = null)
+    public static Order Create(
+        string orderNumber,
+        string buyerName,
+        string buyerEmail,
+        Address shippingAddress,
+        Guid? customerId = null,
+        string? buyerPhone = null,
+        string? paymentMethod = null,
+        string? deliveryMethod = null,
+        string? notes = null,
+        string currency = "ARS")
     {
         var order = new Order
         {
             OrderNumber = orderNumber,
+            Currency = currency.ToUpperInvariant(),
             CustomerId = customerId,
+            BuyerName = buyerName,
+            BuyerEmail = buyerEmail,
+            BuyerPhone = buyerPhone,
+            PaymentMethod = paymentMethod,
+            DeliveryMethod = deliveryMethod,
             ShippingAddress = shippingAddress,
             Notes = notes,
-            Subtotal = Money.Zero(),
-            DiscountAmount = Money.Zero(),
-            ShippingCost = Money.Zero(),
-            TaxAmount = Money.Zero(),
-            Total = Money.Zero(),
+            Subtotal = Money.Zero(currency),
+            DiscountAmount = Money.Zero(currency),
+            ShippingCost = Money.Zero(currency),
+            TaxAmount = Money.Zero(currency),
+            Total = Money.Zero(currency),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -84,7 +107,7 @@ public class Order : AuditableEntity
 
     private void RecalculateTotals()
     {
-        Subtotal = _items.Aggregate(Money.Zero(), (acc, i) => acc + i.Total);
+        Subtotal = _items.Aggregate(Money.Zero(Currency), (acc, i) => acc + i.Total);
         Total = Subtotal - DiscountAmount + ShippingCost + TaxAmount;
         UpdatedAt = DateTime.UtcNow;
     }

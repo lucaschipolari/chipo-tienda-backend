@@ -10,14 +10,27 @@ public class PurchaseOrderRepository(AppDbContext context) : BaseRepository<Purc
         await DbSet.Include(p => p.Items).FirstOrDefaultAsync(p => p.Id == id, ct);
 
     public async Task<(IReadOnlyList<PurchaseOrder> Items, int TotalCount)> GetPagedAsync(
-        int page, int pageSize, Guid? supplierId = null, PurchaseOrderStatus? status = null, CancellationToken ct = default)
+        int page,
+        int pageSize,
+        Guid? supplierId = null,
+        string? status = null,
+        CancellationToken ct = default)
     {
-        var query = DbSet.AsQueryable();
-        if (supplierId.HasValue) query = query.Where(p => p.SupplierId == supplierId);
-        if (status.HasValue) query = query.Where(p => p.Status == status);
+        var query = DbSet.Include(p => p.Items).AsQueryable();
+
+        if (supplierId.HasValue)
+            query = query.Where(p => p.SupplierId == supplierId.Value);
+
+        if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<PurchaseOrderStatus>(status, true, out var parsedStatus))
+            query = query.Where(p => p.Status == parsedStatus);
 
         var total = await query.CountAsync(ct);
-        var items = await query.OrderByDescending(p => p.CreatedAt).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(ct);
+        var items = await query
+            .OrderByDescending(p => p.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
+
         return (items, total);
     }
 
@@ -25,6 +38,6 @@ public class PurchaseOrderRepository(AppDbContext context) : BaseRepository<Purc
     {
         var year = DateTime.UtcNow.Year;
         var count = await DbSet.CountAsync(p => p.CreatedAt.Year == year, ct);
-        return $"PO-{year}-{(count + 1):D4}";
+        return $"OC-{year}-{(count + 1):D5}";
     }
 }
