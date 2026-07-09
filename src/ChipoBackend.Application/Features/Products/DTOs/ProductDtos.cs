@@ -70,6 +70,8 @@ public record ProductListItemDto(
     Guid? DefaultVariantId,
     int DefaultVariantStock,
     string? MainImageUrl,
+    string? Description,
+    IReadOnlyList<string> Notes,
     DateTime CreatedAt,
     DateTime UpdatedAt);
 

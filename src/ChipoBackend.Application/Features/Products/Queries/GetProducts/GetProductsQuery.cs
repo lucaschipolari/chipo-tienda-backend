@@ -53,6 +53,8 @@ public class GetProductsQueryHandler(IProductRepository productRepository)
                 DefaultVariantId: defaultVariant?.Id,
                 DefaultVariantStock: defaultVariant?.StockQuantity ?? 0,
                 MainImageUrl: p.Images.OrderBy(i => i.DisplayOrder).FirstOrDefault()?.Url,
+                Description: p.Description,
+                Notes: p.TopNotes.Concat(p.HeartNotes).Concat(p.BaseNotes).ToList(),
                 CreatedAt: p.CreatedAt,
                 UpdatedAt: p.UpdatedAt
             );
