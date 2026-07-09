@@ -26,8 +26,9 @@ public static class DbInitializer
 
     // ── SuperAdmin por defecto ─────────────────────────────────────────────────
 
-    private const string DefaultEmail     = "admin@chipo.com";
-    private const string DefaultPassword  = "Admin1234!";
+    // En producción se sobreescriben con las variables de entorno ADMIN_EMAIL / ADMIN_PASSWORD
+    private static readonly string DefaultEmail    = Environment.GetEnvironmentVariable("ADMIN_EMAIL")    ?? "admin@chipo.com";
+    private static readonly string DefaultPassword = Environment.GetEnvironmentVariable("ADMIN_PASSWORD") ?? "Admin1234!";
     private const string DefaultFirstName = "Super";
     private const string DefaultLastName  = "Admin";
 

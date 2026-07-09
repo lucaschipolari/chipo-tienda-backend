@@ -2,10 +2,29 @@ using ChipoBackend.API.Middlewares;
 using ChipoBackend.API.ModelBinders;
 using ChipoBackend.Application;
 using ChipoBackend.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ── Producción (Railway) ─────────────────────────────────────────────────────
+// Railway inyecta DATABASE_URL (postgres://...) y PORT. Los adaptamos acá.
+var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+if (!string.IsNullOrWhiteSpace(databaseUrl))
+{
+    var uri = new Uri(databaseUrl);
+    var creds = uri.UserInfo.Split(':', 2);
+    builder.Configuration["ConnectionStrings:DefaultConnection"] =
+        $"Host={uri.Host};Port={(uri.Port > 0 ? uri.Port : 5432)};" +
+        $"Database={uri.AbsolutePath.TrimStart('/')};" +
+        $"Username={creds[0]};Password={(creds.Length > 1 ? creds[1] : "")};" +
+        "SSL Mode=Prefer;Trust Server Certificate=true";
+}
+
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrWhiteSpace(port))
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 // Serilog
 builder.Host.UseSerilog((ctx, lc) => lc
@@ -89,11 +108,19 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// ── Seed de base de datos ──────────────────────────────────────────────────────
+// ── Migraciones + seed de base de datos ─────────────────────────────────────────
 using (var scope = app.Services.CreateScope())
 {
     var db     = scope.ServiceProvider.GetRequiredService<ChipoBackend.Infrastructure.Persistence.AppDbContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    // Aplica las migraciones pendientes (en prod la base arranca vacía)
+    if (db.Database.GetPendingMigrations().Any())
+    {
+        logger.LogInformation("Aplicando migraciones de base de datos…");
+        await db.Database.MigrateAsync();
+    }
+
     await ChipoBackend.Infrastructure.Persistence.DbInitializer.SeedAsync(db, logger);
 }
 
