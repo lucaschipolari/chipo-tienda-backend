@@ -1,5 +1,7 @@
+using ChipoBackend.Application.Features.Products.Commands.AddProductImage;
 using ChipoBackend.Application.Features.Products.Commands.AddProductVariant;
 using ChipoBackend.Application.Features.Products.Commands.ChangeProductStatus;
+using ChipoBackend.Application.Features.Products.Commands.RemoveProductImage;
 using ChipoBackend.Application.Features.Products.Commands.CreateProduct;
 using ChipoBackend.Application.Features.Products.Commands.UpdateProduct;
 using ChipoBackend.Application.Features.Products.Commands.UpdateProductVariant;
@@ -93,6 +95,27 @@ public class ProductsController : BaseApiController
         await Mediator.Send(command, ct);
         return NoContent();
     }
+
+    // ── Imágenes ─────────────────────────────────────────────────────────────
+
+    /// <summary>Agregar una imagen (por URL; admite links de Google Drive) a un producto</summary>
+    [HttpPost("{productId:guid}/images")]
+    [Authorize(Roles = "SuperAdmin,Admin,Supervisor")]
+    public async Task<IActionResult> AddImage(Guid productId, [FromBody] ProductAddImageRequest request, CancellationToken ct)
+    {
+        var imageId = await Mediator.Send(new AddProductImageCommand(productId, request.Url, request.AltText), ct);
+        return CreatedAtAction(nameof(GetById), new { id = productId }, new { imageId });
+    }
+
+    /// <summary>Eliminar una imagen de un producto</summary>
+    [HttpDelete("{productId:guid}/images/{imageId:guid}")]
+    [Authorize(Roles = "SuperAdmin,Admin,Supervisor")]
+    public async Task<IActionResult> RemoveImage(Guid productId, Guid imageId, CancellationToken ct)
+    {
+        await Mediator.Send(new RemoveProductImageCommand(productId, imageId), ct);
+        return NoContent();
+    }
 }
 
 public record ProductChangeStatusRequest(string Status);
+public record ProductAddImageRequest(string Url, string? AltText = null);

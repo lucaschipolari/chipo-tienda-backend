@@ -96,7 +96,7 @@ public class CreateProductCommandHandler(
         {
             var order = 0;
             foreach (var raw in urls.Where(u => !string.IsNullOrWhiteSpace(u)))
-                product.AddImage(NormalizeImageUrl(raw.Trim()), displayOrder: order++);
+                product.AddImage(ImageUrlHelper.Normalize(raw), displayOrder: order++);
         }
 
         unitOfWork.Add(product);
@@ -133,30 +133,6 @@ public class CreateProductCommandHandler(
                 .Replace("ñ", "n").Replace("ä", "a").Replace("ö", "o"),
             @"[^a-z0-9\-]", "")
         .Trim('-');
-
-    /// <summary>
-    /// Convierte links de Google Drive (o de carpeta "compartir") a una URL directa
-    /// que se puede usar en &lt;img src&gt;. Otros links se devuelven tal cual.
-    /// </summary>
-    private static string NormalizeImageUrl(string url)
-    {
-        // Formatos soportados:
-        //   https://drive.google.com/file/d/FILEID/view?usp=sharing
-        //   https://drive.google.com/open?id=FILEID
-        //   https://drive.google.com/uc?id=FILEID&export=...
-        var m = Regex.Match(url, @"drive\.google\.com/file/d/([\w-]+)");
-        if (!m.Success)
-            m = Regex.Match(url, @"drive\.google\.com/(?:open|uc)\?(?:[^#]*&)?id=([\w-]+)");
-
-        if (m.Success)
-        {
-            var fileId = m.Groups[1].Value;
-            // El endpoint "thumbnail" es el más estable para embeber en <img>.
-            return $"https://drive.google.com/thumbnail?id={fileId}&sz=w1200";
-        }
-
-        return url;
-    }
 
     private static string NormalizeSlug(string slug) =>
         Regex.Replace(slug.ToLowerInvariant().Trim(), @"[^a-z0-9\-]", "").Trim('-');
