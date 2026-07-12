@@ -17,7 +17,11 @@ public record CreateSaleCommand(
     string PaymentMethod,
     string Channel,
     string Currency,
-    string? Notes
+    string? Notes,
+    // Importación histórica: no valida ni descuenta stock, y usa la fecha provista.
+    bool IsHistorical = false,
+    DateTime? SaleDate = null,
+    string? CustomerName = null
 ) : IRequest<Guid>;
 
 public class CreateSaleCommandValidator : AbstractValidator<CreateSaleCommand>
@@ -35,10 +39,18 @@ public class CreateSaleCommandValidator : AbstractValidator<CreateSaleCommand>
         RuleFor(x => x.Currency).NotEmpty().Length(3);
         RuleForEach(x => x.Items).ChildRules(item =>
         {
-            item.RuleFor(i => i.ProductId).NotEmpty();
-            item.RuleFor(i => i.VariantId).NotEmpty();
             item.RuleFor(i => i.Quantity).GreaterThan(0);
             item.RuleFor(i => i.UnitPrice).GreaterThanOrEqualTo(0);
+        });
+
+        // El producto/variante real solo se exige en ventas normales (no en importación histórica).
+        When(x => !x.IsHistorical, () =>
+        {
+            RuleForEach(x => x.Items).ChildRules(item =>
+            {
+                item.RuleFor(i => i.ProductId).NotEmpty();
+                item.RuleFor(i => i.VariantId).NotEmpty();
+            });
         });
     }
 }
@@ -52,6 +64,10 @@ public class CreateSaleCommandHandler(
 {
     public async Task<Guid> Handle(CreateSaleCommand request, CancellationToken ct)
     {
+        // ── Importación histórica: registra la venta con su fecha, sin tocar stock ──
+        if (request.IsHistorical)
+            return await HandleHistorical(request, ct);
+
         // Validar stock e ítems
         var resolvedItems = new List<(CreateSaleItemRequest Req, string ProductName, string Sku, decimal? Cost)>();
         foreach (var itemReq in request.Items)
@@ -99,6 +115,39 @@ public class CreateSaleCommandHandler(
                 reason: $"Venta {saleNumber}",
                 createdByUserId: userId);
             unitOfWork.Add(movement);
+        }
+
+        await unitOfWork.SaveChangesAsync(ct);
+        return sale.Id;
+    }
+
+    // ── Importación histórica ───────────────────────────────────────────────────
+    private async Task<Guid> HandleHistorical(CreateSaleCommand request, CancellationToken ct)
+    {
+        var saleNumber = await saleRepository.GenerateSaleNumberAsync(ct);
+        var channel = Enum.Parse<SaleChannel>(request.Channel, ignoreCase: true);
+        var userId = currentUser.UserId ?? Guid.Empty;
+
+        // El nombre del comprador va en las notas (no hay cliente real asociado).
+        var notes = request.Notes;
+        if (!string.IsNullOrWhiteSpace(request.CustomerName))
+            notes = string.IsNullOrWhiteSpace(notes)
+                ? $"Cliente: {request.CustomerName}"
+                : $"Cliente: {request.CustomerName} · {notes}";
+
+        var sale = Sale.Create(saleNumber, userId, request.PaymentMethod, channel,
+            request.Currency, customerId: null, notes: notes, createdAt: request.SaleDate);
+        unitOfWork.Add(sale);
+
+        foreach (var item in request.Items)
+        {
+            var unitPrice = Money.Of(item.UnitPrice, request.Currency);
+            var discount = Money.Of(item.Discount, request.Currency);
+            var unitCost = item.UnitCost.HasValue ? Money.Of(item.UnitCost.Value, request.Currency) : null;
+            sale.AddItem(
+                item.ProductId, item.VariantId,
+                item.ProductName ?? "Producto", item.Sku ?? "-",
+                item.Quantity, unitPrice, discount, unitCost);
         }
 
         await unitOfWork.SaveChangesAsync(ct);

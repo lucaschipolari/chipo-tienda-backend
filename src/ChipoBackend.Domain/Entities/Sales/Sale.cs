@@ -20,8 +20,9 @@ public class Sale : AuditableEntity
 
     private Sale() { }
 
-    public static Sale Create(string saleNumber, Guid soldByUserId, string paymentMethod, SaleChannel channel, string currency = "ARS", Guid? customerId = null, string? notes = null)
+    public static Sale Create(string saleNumber, Guid soldByUserId, string paymentMethod, SaleChannel channel, string currency = "ARS", Guid? customerId = null, string? notes = null, DateTime? createdAt = null)
     {
+        var now = createdAt ?? DateTime.UtcNow;
         return new Sale
         {
             SaleNumber = saleNumber,
@@ -33,8 +34,8 @@ public class Sale : AuditableEntity
             Subtotal = Money.Zero(currency),
             DiscountAmount = Money.Zero(currency),
             Total = Money.Zero(currency),
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            CreatedAt = now,
+            UpdatedAt = now
         };
     }
 

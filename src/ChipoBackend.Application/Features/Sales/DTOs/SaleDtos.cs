@@ -86,5 +86,9 @@ public record CreateSaleItemRequest(
     Guid VariantId,
     int Quantity,
     decimal UnitPrice,
-    decimal Discount = 0
+    decimal Discount = 0,
+    // Para importación histórica (cuando no hay producto/variante real):
+    string? ProductName = null,
+    string? Sku = null,
+    decimal? UnitCost = null
 );

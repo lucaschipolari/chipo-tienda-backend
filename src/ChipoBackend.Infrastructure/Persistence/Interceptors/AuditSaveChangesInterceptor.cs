@@ -82,7 +82,10 @@ public class AuditSaveChangesInterceptor(
         {
             if (entry.State == EntityState.Added)
             {
-                entry.Property(nameof(IAuditable.CreatedAt)).CurrentValue = now;
+                // Respetar CreatedAt si la entidad ya lo trae (ej. ventas históricas importadas).
+                var currentCreated = entry.Property(nameof(IAuditable.CreatedAt)).CurrentValue;
+                if (currentCreated is null || (DateTime)currentCreated == default)
+                    entry.Property(nameof(IAuditable.CreatedAt)).CurrentValue = now;
                 entry.Property(nameof(IAuditable.UpdatedAt)).CurrentValue = now;
                 entry.Property(nameof(IAuditable.CreatedByUserId)).CurrentValue = userId;
                 entry.Property(nameof(IAuditable.UpdatedByUserId)).CurrentValue = userId;
