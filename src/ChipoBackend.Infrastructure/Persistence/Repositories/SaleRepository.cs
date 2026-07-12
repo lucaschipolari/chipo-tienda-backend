@@ -41,6 +41,8 @@ public class SaleRepository(AppDbContext context) : BaseRepository<Sale>(context
             .ToListAsync(ct);
 
         var totalRevenue = sales.Sum(s => s.Total.Amount);
+        var totalCost = sales.Sum(s => s.TotalCost.Amount);
+        var totalProfit = totalRevenue - totalCost;
         var totalSales = sales.Count;
         var avgTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
 
@@ -77,6 +79,6 @@ public class SaleRepository(AppDbContext context) : BaseRepository<Sale>(context
             .Take(10)
             .ToList();
 
-        return new SalesSummaryData(totalSales, totalRevenue, avgTicket, byDay, topProducts, topCustomers);
+        return new SalesSummaryData(totalSales, totalRevenue, totalCost, totalProfit, avgTicket, byDay, topProducts, topCustomers);
     }
 }

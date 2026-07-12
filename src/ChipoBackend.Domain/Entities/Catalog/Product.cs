@@ -103,12 +103,12 @@ public class Product : AuditableEntity
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public ProductVariant AddVariant(string sku, Dictionary<string, string> attributes, int initialStock = 0, Money? price = null, int minStockThreshold = 5, Money? compareAtPrice = null)
+    public ProductVariant AddVariant(string sku, Dictionary<string, string> attributes, int initialStock = 0, Money? price = null, int minStockThreshold = 5, Money? compareAtPrice = null, Money? cost = null)
     {
         if (_variants.Any(v => v.Sku == sku))
             throw new BusinessRuleException("DuplicateVariantSku", $"El SKU '{sku}' ya existe en este producto.");
 
-        var variant = ProductVariant.Create(Id, sku, attributes, initialStock, price, minStockThreshold, compareAtPrice);
+        var variant = ProductVariant.Create(Id, sku, attributes, initialStock, price, minStockThreshold, compareAtPrice, cost);
         _variants.Add(variant);
         UpdatedAt = DateTime.UtcNow;
         return variant;

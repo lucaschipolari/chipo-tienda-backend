@@ -18,6 +18,8 @@ public interface ISaleRepository : IRepository<Sale>
 public record SalesSummaryData(
     int TotalSales,
     decimal TotalRevenue,
+    decimal TotalCost,
+    decimal TotalProfit,
     decimal AverageTicket,
     List<(DateTime Date, decimal Revenue, int Count)> ByDay,
     List<(Guid ProductId, string ProductName, int Quantity, decimal Revenue)> TopProducts,

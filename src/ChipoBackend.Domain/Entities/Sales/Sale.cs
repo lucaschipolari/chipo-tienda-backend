@@ -38,9 +38,9 @@ public class Sale : AuditableEntity
         };
     }
 
-    public void AddItem(Guid productId, Guid variantId, string productName, string sku, int quantity, Money unitPrice, Money discount)
+    public void AddItem(Guid productId, Guid variantId, string productName, string sku, int quantity, Money unitPrice, Money discount, Money? unitCost = null)
     {
-        _items.Add(SaleItem.Create(Id, productId, variantId, productName, sku, quantity, unitPrice, discount));
+        _items.Add(SaleItem.Create(Id, productId, variantId, productName, sku, quantity, unitPrice, discount, unitCost));
         RecalculateTotals();
     }
 
@@ -51,6 +51,13 @@ public class Sale : AuditableEntity
         Total = Subtotal - DiscountAmount;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    /// <summary>Costo total de la venta (suma de costos de cada línea).</summary>
+    public Money TotalCost =>
+        _items.Aggregate(Money.Zero(Subtotal.Currency), (acc, i) => acc + i.TotalCost);
+
+    /// <summary>Ganancia real de la venta (total cobrado − costo total).</summary>
+    public Money Profit => Total - TotalCost;
 }
 
 public enum SaleChannel { InStore, Phone, WhatsApp, Other }

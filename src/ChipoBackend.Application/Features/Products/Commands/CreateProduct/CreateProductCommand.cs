@@ -106,7 +106,8 @@ public class CreateProductCommandHandler(
         {
             var varPrice = varReq.Price.HasValue ? Money.Of(varReq.Price.Value, request.Currency) : null;
             var varCompareAt = varReq.CompareAtPrice.HasValue ? Money.Of(varReq.CompareAtPrice.Value, request.Currency) : null;
-            var variant = product.AddVariant(varReq.Sku, varReq.Attributes ?? [], varReq.InitialStock, varPrice, varReq.MinStockThreshold, varCompareAt);
+            var varCost = varReq.Cost.HasValue ? Money.Of(varReq.Cost.Value, request.Currency) : null;
+            var variant = product.AddVariant(varReq.Sku, varReq.Attributes ?? [], varReq.InitialStock, varPrice, varReq.MinStockThreshold, varCompareAt, varCost);
             unitOfWork.Add(variant);
 
             if (varReq.InitialStock > 0)

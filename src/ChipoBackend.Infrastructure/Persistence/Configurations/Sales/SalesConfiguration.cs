@@ -19,6 +19,8 @@ public class SaleConfiguration : IEntityTypeConfiguration<Sale>
         builder.OwnsOne(s => s.Total, m => { m.Property(x => x.Amount).HasColumnName("total").HasColumnType("decimal(12,2)"); m.Property(x => x.Currency).HasColumnName("total_currency").HasMaxLength(3); });
         builder.HasMany(s => s.Items).WithOne().HasForeignKey(i => i.SaleId);
         builder.Ignore(s => s.DomainEvents);
+        builder.Ignore(s => s.TotalCost);   // calculado
+        builder.Ignore(s => s.Profit);      // calculado
     }
 }
 
@@ -31,6 +33,9 @@ public class SaleItemConfiguration : IEntityTypeConfiguration<SaleItem>
         builder.OwnsOne(i => i.UnitPrice, m => { m.Property(x => x.Amount).HasColumnName("unit_price").HasColumnType("decimal(12,2)"); m.Property(x => x.Currency).HasColumnName("unit_price_currency").HasMaxLength(3); });
         builder.OwnsOne(i => i.Discount, m => { m.Property(x => x.Amount).HasColumnName("discount").HasColumnType("decimal(12,2)"); m.Property(x => x.Currency).HasColumnName("discount_currency").HasMaxLength(3); });
         builder.OwnsOne(i => i.Total, m => { m.Property(x => x.Amount).HasColumnName("total").HasColumnType("decimal(12,2)"); m.Property(x => x.Currency).HasColumnName("total_currency").HasMaxLength(3); });
+        builder.OwnsOne(i => i.UnitCost, m => { m.Property(x => x.Amount).HasColumnName("unit_cost").HasColumnType("decimal(12,2)"); m.Property(x => x.Currency).HasColumnName("unit_cost_currency").HasMaxLength(3); });
         builder.Ignore(i => i.DomainEvents);
+        builder.Ignore(i => i.TotalCost);   // calculado
+        builder.Ignore(i => i.Profit);      // calculado
     }
 }

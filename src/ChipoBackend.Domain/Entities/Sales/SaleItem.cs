@@ -14,10 +14,11 @@ public class SaleItem : BaseEntity
     public Money UnitPrice { get; private set; } = null!;
     public Money Discount { get; private set; } = null!;
     public Money Total { get; private set; } = null!;
+    public Money UnitCost { get; private set; } = null!;   // costo unitario al momento de la venta
 
     private SaleItem() { }
 
-    public static SaleItem Create(Guid saleId, Guid productId, Guid variantId, string productName, string sku, int quantity, Money unitPrice, Money discount)
+    public static SaleItem Create(Guid saleId, Guid productId, Guid variantId, string productName, string sku, int quantity, Money unitPrice, Money discount, Money? unitCost = null)
     {
         return new SaleItem
         {
@@ -29,7 +30,14 @@ public class SaleItem : BaseEntity
             Quantity = quantity,
             UnitPrice = unitPrice,
             Discount = discount,
-            Total = (unitPrice * quantity) - discount
+            Total = (unitPrice * quantity) - discount,
+            UnitCost = unitCost ?? Money.Zero(unitPrice.Currency)
         };
     }
+
+    /// <summary>Costo total de la línea (costo unitario × cantidad).</summary>
+    public Money TotalCost => UnitCost * Quantity;
+
+    /// <summary>Ganancia de la línea (total cobrado − costo total).</summary>
+    public Money Profit => Total - TotalCost;
 }

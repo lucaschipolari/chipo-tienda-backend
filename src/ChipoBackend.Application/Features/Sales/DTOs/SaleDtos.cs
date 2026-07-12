@@ -10,6 +10,9 @@ public record SaleItemDto(
     decimal UnitPrice,
     decimal Discount,
     decimal Total,
+    decimal UnitCost,
+    decimal TotalCost,
+    decimal Profit,
     string Currency
 );
 
@@ -24,6 +27,8 @@ public record SaleDto(
     decimal Subtotal,
     decimal DiscountAmount,
     decimal Total,
+    decimal TotalCost,
+    decimal Profit,
     string Currency,
     string PaymentMethod,
     string? Notes,
@@ -66,6 +71,8 @@ public record SalesReportDto(
     DateTime To,
     int TotalSales,
     decimal TotalRevenue,
+    decimal TotalCost,
+    decimal TotalProfit,
     decimal AverageTicket,
     decimal RevenueVsPreviousPeriod,   // % de variación
     List<DailyRevenueDto> ByDay,

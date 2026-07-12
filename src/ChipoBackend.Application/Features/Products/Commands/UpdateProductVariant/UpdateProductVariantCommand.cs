@@ -14,7 +14,8 @@ public record UpdateProductVariantCommand(
     string Currency,
     int MinStockThreshold,
     bool IsActive,
-    decimal? CompareAtPrice = null
+    decimal? CompareAtPrice = null,
+    decimal? Cost = null
 ) : IRequest;
 
 public class UpdateProductVariantCommandValidator : AbstractValidator<UpdateProductVariantCommand>
@@ -47,6 +48,9 @@ public class UpdateProductVariantCommandHandler(
 
         var compareAt = request.CompareAtPrice.HasValue ? Money.Of(request.CompareAtPrice.Value, request.Currency) : null;
         variant.UpdateCompareAtPrice(compareAt);
+
+        var cost = request.Cost.HasValue ? Money.Of(request.Cost.Value, request.Currency) : null;
+        variant.UpdateCost(cost);
 
         if (request.IsActive && !variant.IsActive) variant.Activate();
         else if (!request.IsActive && variant.IsActive) variant.Deactivate();

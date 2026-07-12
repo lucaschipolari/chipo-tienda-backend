@@ -46,6 +46,8 @@ public class GetSalesReportQueryHandler(
             To: request.To,
             TotalSales: summary.TotalSales,
             TotalRevenue: summary.TotalRevenue,
+            TotalCost: summary.TotalCost,
+            TotalProfit: summary.TotalProfit,
             AverageTicket: summary.AverageTicket,
             RevenueVsPreviousPeriod: (decimal)variationPct,
             ByDay: summary.ByDay.Select(d => new DailyRevenueDto(d.Date, d.Revenue, d.Count)).ToList(),

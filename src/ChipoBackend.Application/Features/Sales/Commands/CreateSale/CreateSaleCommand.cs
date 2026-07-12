@@ -53,7 +53,7 @@ public class CreateSaleCommandHandler(
     public async Task<Guid> Handle(CreateSaleCommand request, CancellationToken ct)
     {
         // Validar stock e ítems
-        var resolvedItems = new List<(CreateSaleItemRequest Req, string ProductName, string Sku)>();
+        var resolvedItems = new List<(CreateSaleItemRequest Req, string ProductName, string Sku, decimal? Cost)>();
         foreach (var itemReq in request.Items)
         {
             var product = await productRepository.GetWithVariantsAsync(itemReq.ProductId, ct)
@@ -68,7 +68,7 @@ public class CreateSaleCommandHandler(
             if (variant.StockQuantity < itemReq.Quantity)
                 throw new ConflictException($"Stock insuficiente para '{variant.Sku}'. Disponible: {variant.StockQuantity}.");
 
-            resolvedItems.Add((itemReq, product.Name, variant.Sku));
+            resolvedItems.Add((itemReq, product.Name, variant.Sku, variant.Cost?.Amount));
         }
 
         var saleNumber = await saleRepository.GenerateSaleNumberAsync(ct);
@@ -79,11 +79,12 @@ public class CreateSaleCommandHandler(
         unitOfWork.Add(sale);
 
         // Agregar ítems y descontar stock
-        foreach (var (req, productName, sku) in resolvedItems)
+        foreach (var (req, productName, sku, cost) in resolvedItems)
         {
             var unitPrice = Money.Of(req.UnitPrice, request.Currency);
             var discount = Money.Of(req.Discount, request.Currency);
-            sale.AddItem(req.ProductId, req.VariantId, productName, sku, req.Quantity, unitPrice, discount);
+            var unitCost = cost.HasValue ? Money.Of(cost.Value, request.Currency) : null;
+            sale.AddItem(req.ProductId, req.VariantId, productName, sku, req.Quantity, unitPrice, discount, unitCost);
 
             // Descontar stock inmediatamente (venta directa)
             var product = await productRepository.GetWithVariantsAsync(req.ProductId, ct);

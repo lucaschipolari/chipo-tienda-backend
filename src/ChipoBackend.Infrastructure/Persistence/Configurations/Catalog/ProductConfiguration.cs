@@ -72,6 +72,12 @@ public class ProductVariantConfiguration : IEntityTypeConfiguration<ProductVaria
             money.Property(m => m.Currency).HasColumnName("compare_at_currency").HasMaxLength(3);
         });
 
+        builder.OwnsOne(v => v.Cost, money =>
+        {
+            money.Property(m => m.Amount).HasColumnName("cost").HasColumnType("decimal(12,2)");
+            money.Property(m => m.Currency).HasColumnName("cost_currency").HasMaxLength(3);
+        });
+
         builder.Ignore(v => v.DomainEvents);
     }
 }

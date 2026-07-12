@@ -18,6 +18,7 @@ public record ProductVariantDto(
     Dictionary<string, string> Attributes,
     decimal? Price,
     decimal? CompareAtPrice,
+    decimal? Cost,
     string Currency,
     int StockQuantity,
     int MinStockThreshold,
@@ -82,4 +83,5 @@ public record CreateVariantRequest(
     int InitialStock = 0,
     decimal? Price = null,
     int MinStockThreshold = 5,
-    decimal? CompareAtPrice = null);
+    decimal? CompareAtPrice = null,
+    decimal? Cost = null);

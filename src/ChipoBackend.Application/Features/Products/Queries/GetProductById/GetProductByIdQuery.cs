@@ -45,6 +45,7 @@ public class GetProductByIdQueryHandler(IProductRepository productRepository)
                 Attributes: v.Attributes,
                 Price: v.Price is { Amount: > 0 } ? v.Price.Amount : (decimal?)null,
                 CompareAtPrice: v.CompareAtPrice is { Amount: > 0 } ? v.CompareAtPrice.Amount : (decimal?)null,
+                Cost: v.Cost is { Amount: > 0 } ? v.Cost.Amount : (decimal?)null,
                 Currency: v.Price?.Currency ?? product.BasePrice.Currency,
                 StockQuantity: v.StockQuantity,
                 MinStockThreshold: v.MinStockThreshold,

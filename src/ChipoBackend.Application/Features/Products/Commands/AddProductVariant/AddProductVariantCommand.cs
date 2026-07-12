@@ -17,7 +17,8 @@ public record AddProductVariantCommand(
     decimal? Price,
     string Currency,
     int MinStockThreshold,
-    decimal? CompareAtPrice = null
+    decimal? CompareAtPrice = null,
+    decimal? Cost = null
 ) : IRequest<Guid>;
 
 public class AddProductVariantCommandValidator : AbstractValidator<AddProductVariantCommand>
@@ -46,7 +47,8 @@ public class AddProductVariantCommandHandler(
 
         var price = request.Price.HasValue ? Money.Of(request.Price.Value, request.Currency) : null;
         var compareAt = request.CompareAtPrice.HasValue ? Money.Of(request.CompareAtPrice.Value, request.Currency) : null;
-        var variant = product.AddVariant(request.Sku, request.Attributes ?? [], request.InitialStock, price, request.MinStockThreshold, compareAt);
+        var cost = request.Cost.HasValue ? Money.Of(request.Cost.Value, request.Currency) : null;
+        var variant = product.AddVariant(request.Sku, request.Attributes ?? [], request.InitialStock, price, request.MinStockThreshold, compareAt, cost);
         unitOfWork.Add(variant);
 
         if (request.InitialStock > 0)
