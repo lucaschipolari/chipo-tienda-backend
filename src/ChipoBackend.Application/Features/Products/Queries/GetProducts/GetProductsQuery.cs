@@ -55,6 +55,8 @@ public class GetProductsQueryHandler(IProductRepository productRepository)
                 MainImageUrl: p.Images.OrderBy(i => i.DisplayOrder).FirstOrDefault()?.Url,
                 Description: p.Description,
                 Notes: p.TopNotes.Concat(p.HeartNotes).Concat(p.BaseNotes).ToList(),
+                // Costo de referencia: el de la variante por defecto, o el primero con costo cargado
+                Cost: (defaultVariant?.Cost ?? p.Variants.Select(v => v.Cost).FirstOrDefault(c => c is not null))?.Amount,
                 CreatedAt: p.CreatedAt,
                 UpdatedAt: p.UpdatedAt
             );

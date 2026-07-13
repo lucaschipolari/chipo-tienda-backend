@@ -73,6 +73,7 @@ public record ProductListItemDto(
     string? MainImageUrl,
     string? Description,
     IReadOnlyList<string> Notes,
+    decimal? Cost,
     DateTime CreatedAt,
     DateTime UpdatedAt);
 
