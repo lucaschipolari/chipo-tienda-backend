@@ -24,6 +24,10 @@ public class GetStockValuationQueryHandler(IProductRepository productRepository)
 
         foreach (var p in products)
         {
+            // Los accesorios de empaque no cuentan como capital de mercadería.
+            if (string.Equals(p.Category?.Name, "Empaque", StringComparison.OrdinalIgnoreCase))
+                continue;
+
             foreach (var v in p.Variants.Where(v => v.IsActive && v.StockQuantity > 0))
             {
                 units += v.StockQuantity;
