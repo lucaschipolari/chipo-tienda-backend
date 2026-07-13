@@ -91,7 +91,7 @@ public class CreateSaleCommandHandler(
         var channel = Enum.Parse<SaleChannel>(request.Channel, ignoreCase: true);
         var userId = currentUser.UserId ?? Guid.Empty;
 
-        var sale = Sale.Create(saleNumber, userId, request.PaymentMethod, channel, request.Currency, request.CustomerId, request.Notes);
+        var sale = Sale.Create(saleNumber, userId, request.PaymentMethod, channel, request.Currency, request.CustomerId, request.Notes, customerName: request.CustomerName);
         unitOfWork.Add(sale);
 
         // Agregar ítems y descontar stock
@@ -128,15 +128,9 @@ public class CreateSaleCommandHandler(
         var channel = Enum.Parse<SaleChannel>(request.Channel, ignoreCase: true);
         var userId = currentUser.UserId ?? Guid.Empty;
 
-        // El nombre del comprador va en las notas (no hay cliente real asociado).
-        var notes = request.Notes;
-        if (!string.IsNullOrWhiteSpace(request.CustomerName))
-            notes = string.IsNullOrWhiteSpace(notes)
-                ? $"Cliente: {request.CustomerName}"
-                : $"Cliente: {request.CustomerName} · {notes}";
-
         var sale = Sale.Create(saleNumber, userId, request.PaymentMethod, channel,
-            request.Currency, customerId: null, notes: notes, createdAt: request.SaleDate);
+            request.Currency, customerId: null, notes: request.Notes, createdAt: request.SaleDate,
+            customerName: request.CustomerName);
         unitOfWork.Add(sale);
 
         foreach (var item in request.Items)

@@ -7,6 +7,7 @@ public class Sale : AuditableEntity
 {
     public string SaleNumber { get; private set; } = null!;
     public Guid? CustomerId { get; private set; }
+    public string? CustomerName { get; private set; }   // nombre/apodo libre (sin crear cliente)
     public Guid SoldByUserId { get; private set; }
     public SaleChannel Channel { get; private set; }
     public Money Subtotal { get; private set; } = null!;
@@ -20,7 +21,7 @@ public class Sale : AuditableEntity
 
     private Sale() { }
 
-    public static Sale Create(string saleNumber, Guid soldByUserId, string paymentMethod, SaleChannel channel, string currency = "ARS", Guid? customerId = null, string? notes = null, DateTime? createdAt = null)
+    public static Sale Create(string saleNumber, Guid soldByUserId, string paymentMethod, SaleChannel channel, string currency = "ARS", Guid? customerId = null, string? notes = null, DateTime? createdAt = null, string? customerName = null)
     {
         var now = createdAt ?? DateTime.UtcNow;
         return new Sale
@@ -28,6 +29,7 @@ public class Sale : AuditableEntity
             SaleNumber = saleNumber,
             SoldByUserId = soldByUserId,
             CustomerId = customerId,
+            CustomerName = customerName,
             Channel = channel,
             PaymentMethod = paymentMethod,
             Notes = notes,

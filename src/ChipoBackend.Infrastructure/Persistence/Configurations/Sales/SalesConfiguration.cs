@@ -12,6 +12,7 @@ public class SaleConfiguration : IEntityTypeConfiguration<Sale>
         builder.HasKey(s => s.Id);
         builder.Property(s => s.SaleNumber).HasMaxLength(50).IsRequired();
         builder.HasIndex(s => s.SaleNumber).IsUnique();
+        builder.Property(s => s.CustomerName).HasMaxLength(150);
         builder.Property(s => s.Channel).HasConversion<string>().HasMaxLength(30);
         builder.Property(s => s.PaymentMethod).HasMaxLength(30).IsRequired();
         builder.OwnsOne(s => s.Subtotal, m => { m.Property(x => x.Amount).HasColumnName("subtotal").HasColumnType("decimal(12,2)"); m.Property(x => x.Currency).HasColumnName("subtotal_currency").HasMaxLength(3); });

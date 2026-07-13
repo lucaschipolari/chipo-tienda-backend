@@ -36,7 +36,7 @@ public class GetSalesQueryHandler(
             Id: s.Id,
             SaleNumber: s.SaleNumber,
             CustomerId: s.CustomerId,
-            CustomerName: s.CustomerId.HasValue ? customers.GetValueOrDefault(s.CustomerId.Value) : null,
+            CustomerName: (s.CustomerId.HasValue ? customers.GetValueOrDefault(s.CustomerId.Value) : null) ?? s.CustomerName,
             Channel: s.Channel.ToString(),
             ItemCount: s.Items.Count,
             Total: s.Total.Amount,

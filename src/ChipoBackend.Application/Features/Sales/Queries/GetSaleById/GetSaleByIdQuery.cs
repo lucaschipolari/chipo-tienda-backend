@@ -28,7 +28,7 @@ public class GetSaleByIdQueryHandler(
             Id: sale.Id,
             SaleNumber: sale.SaleNumber,
             CustomerId: sale.CustomerId,
-            CustomerName: customerName,
+            CustomerName: customerName ?? sale.CustomerName,
             SoldByUserId: sale.SoldByUserId,
             SoldByUserName: null, // Se puede enriquecer con IUserRepository si se necesita
             Channel: sale.Channel.ToString(),

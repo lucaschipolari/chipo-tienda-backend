@@ -1,6 +1,7 @@
 using ChipoBackend.Application.Features.Inventory.Commands.AdjustStock;
 using ChipoBackend.Application.Features.Inventory.Queries.GetLowStock;
 using ChipoBackend.Application.Features.Inventory.Queries.GetStockMovements;
+using ChipoBackend.Application.Features.Inventory.Queries.GetStockValuation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -37,5 +38,13 @@ public class InventoryController : BaseApiController
     {
         await Mediator.Send(command, ct);
         return NoContent();
+    }
+
+    /// <summary>Valuación del stock: capital invertido (costo) y valor a precio de venta</summary>
+    [HttpGet("valuation")]
+    public async Task<IActionResult> GetValuation(CancellationToken ct)
+    {
+        var result = await Mediator.Send(new GetStockValuationQuery(), ct);
+        return Ok(result);
     }
 }

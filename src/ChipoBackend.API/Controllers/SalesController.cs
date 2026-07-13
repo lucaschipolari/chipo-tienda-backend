@@ -1,4 +1,5 @@
 using ChipoBackend.Application.Features.Sales.Commands.CreateSale;
+using ChipoBackend.Application.Features.Sales.Commands.DeleteSale;
 using ChipoBackend.Application.Features.Sales.Queries.GetSaleById;
 using ChipoBackend.Application.Features.Sales.Queries.GetSales;
 using ChipoBackend.Application.Features.Sales.Queries.GetSalesReport;
@@ -39,6 +40,15 @@ public class SalesController : BaseApiController
     {
         var id = await Mediator.Send(command, ct);
         return CreatedAtAction(nameof(GetById), new { id }, new { id });
+    }
+
+    /// <summary>Eliminar una venta</summary>
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        await Mediator.Send(new DeleteSaleCommand(id), ct);
+        return NoContent();
     }
 
     /// <summary>Reporte de ventas por período con métricas y gráficas</summary>
