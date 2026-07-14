@@ -37,6 +37,12 @@ public class ProductVariant : BaseEntity
         };
     }
 
+    public void UpdateAttributes(Dictionary<string, string> attributes)
+    {
+        Attributes = attributes ?? [];
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void UpdatePrice(Money? price)
     {
         Price = price;

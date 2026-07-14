@@ -2,6 +2,8 @@ using ChipoBackend.Application.Features.Products.Commands.AddProductImage;
 using ChipoBackend.Application.Features.Products.Commands.AddProductVariant;
 using ChipoBackend.Application.Features.Products.Commands.ChangeProductStatus;
 using ChipoBackend.Application.Features.Products.Commands.ConfigureDecant;
+using ChipoBackend.Application.Features.Products.Commands.DeleteProduct;
+using ChipoBackend.Application.Features.Products.Commands.DeleteProductVariant;
 using ChipoBackend.Application.Features.Products.Commands.RemoveProductImage;
 using ChipoBackend.Application.Features.Products.Commands.CreateProduct;
 using ChipoBackend.Application.Features.Products.Commands.UpdateProduct;
@@ -64,6 +66,15 @@ public class ProductsController : BaseApiController
         return NoContent();
     }
 
+    /// <summary>Eliminar un producto (con sus variantes e imágenes)</summary>
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        await Mediator.Send(new DeleteProductCommand(id), ct);
+        return NoContent();
+    }
+
     /// <summary>Cambiar el estado de un producto: Draft | Published | Discontinued</summary>
     [HttpPatch("{id:guid}/status")]
     [Authorize(Roles = "SuperAdmin,Admin,Supervisor")]
@@ -94,6 +105,15 @@ public class ProductsController : BaseApiController
         if (productId != command.ProductId || variantId != command.VariantId)
             return BadRequest("IDs de la ruta no coinciden con el body.");
         await Mediator.Send(command, ct);
+        return NoContent();
+    }
+
+    /// <summary>Eliminar una variante de un producto</summary>
+    [HttpDelete("{productId:guid}/variants/{variantId:guid}")]
+    [Authorize(Roles = "SuperAdmin,Admin,Supervisor")]
+    public async Task<IActionResult> DeleteVariant(Guid productId, Guid variantId, CancellationToken ct)
+    {
+        await Mediator.Send(new DeleteProductVariantCommand(productId, variantId), ct);
         return NoContent();
     }
 

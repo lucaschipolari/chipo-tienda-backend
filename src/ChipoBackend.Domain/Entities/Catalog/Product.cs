@@ -154,6 +154,14 @@ public class Product : AuditableEntity
         return variant;
     }
 
+    public void RemoveVariant(Guid variantId)
+    {
+        var variant = _variants.FirstOrDefault(v => v.Id == variantId)
+            ?? throw new DomainException($"Variante {variantId} no encontrada.");
+        _variants.Remove(variant);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public ProductImage AddImage(string url, string? altText = null, int displayOrder = 0)
     {
         var image = ProductImage.Create(Id, url, altText, displayOrder);
