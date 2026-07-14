@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using ChipoBackend.Application.Common.Exceptions;
 using ChipoBackend.Application.Features.Products.DTOs;
 using ChipoBackend.Domain.Interfaces.Repositories;
@@ -47,7 +48,10 @@ public class GetProductByIdQueryHandler(IProductRepository productRepository)
                 CompareAtPrice: v.CompareAtPrice is { Amount: > 0 } ? v.CompareAtPrice.Amount : (decimal?)null,
                 Cost: v.Cost is { Amount: > 0 } ? v.Cost.Amount : (decimal?)null,
                 Currency: v.Price?.Currency ?? product.BasePrice.Currency,
-                StockQuantity: v.StockQuantity,
+                // En decants el stock por tamaño se deriva del pool de ml (ml disponibles ÷ ml del tamaño)
+                StockQuantity: product.IsDecant
+                    ? (Ml(v.Attributes) > 0 ? product.StockMl / Ml(v.Attributes) : 0)
+                    : v.StockQuantity,
                 MinStockThreshold: v.MinStockThreshold,
                 IsActive: v.IsActive,
                 IsBelowMinStock: v.IsBelowMinStock,
@@ -70,5 +74,16 @@ public class GetProductByIdQueryHandler(IProductRepository productRepository)
             CreatedAt: product.CreatedAt,
             UpdatedAt: product.UpdatedAt
         );
+    }
+
+    private static int Ml(Dictionary<string, string> attributes)
+    {
+        if (attributes == null) return 0;
+        foreach (var v in attributes.Values)
+        {
+            var m = Regex.Match(v ?? "", @"(\d+)\s*ml", RegexOptions.IgnoreCase);
+            if (m.Success) return int.Parse(m.Groups[1].Value);
+        }
+        return 0;
     }
 }

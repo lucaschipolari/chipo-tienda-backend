@@ -48,7 +48,7 @@ public class GetProductsQueryHandler(IProductRepository productRepository)
                 Currency: p.BasePrice.Currency,
                 Status: p.Status.ToString(),
                 IsFeatured: p.IsFeatured,
-                TotalStock: p.Variants.Sum(v => v.StockQuantity),
+                TotalStock: p.IsDecant ? p.StockMl : p.Variants.Sum(v => v.StockQuantity),
                 VariantCount: p.Variants.Count,
                 DefaultVariantId: defaultVariant?.Id,
                 DefaultVariantStock: defaultVariant?.StockQuantity ?? 0,
