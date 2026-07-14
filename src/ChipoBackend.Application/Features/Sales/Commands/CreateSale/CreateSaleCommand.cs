@@ -1,6 +1,7 @@
 using ChipoBackend.Application.Common.Exceptions;
 using ChipoBackend.Application.Common.Interfaces;
 using ChipoBackend.Application.Features.Sales.DTOs;
+using ChipoBackend.Application.Features.Settings;
 using ChipoBackend.Domain.Entities.Catalog;
 using ChipoBackend.Domain.Entities.Inventory;
 using ChipoBackend.Domain.Entities.Sales;
@@ -61,7 +62,8 @@ public class CreateSaleCommandHandler(
     ISaleRepository saleRepository,
     IProductRepository productRepository,
     ICurrentUserService currentUser,
-    IUnitOfWork unitOfWork
+    IUnitOfWork unitOfWork,
+    IAppSettingRepository appSettings
 ) : IRequestHandler<CreateSaleCommand, Guid>
 {
     public async Task<Guid> Handle(CreateSaleCommand request, CancellationToken ct)
@@ -106,6 +108,9 @@ public class CreateSaleCommandHandler(
         var channel = Enum.Parse<SaleChannel>(request.Channel, ignoreCase: true);
         var userId = currentUser.UserId ?? Guid.Empty;
 
+        // Costo de frasquitos por tamaño (global) — se suma al costo de cada decant
+        var vialCosts = VialCostSettings.Parse((await appSettings.GetAsync(VialCostSettings.Key, ct))?.Value);
+
         var sale = Sale.Create(saleNumber, userId, request.PaymentMethod, channel, request.Currency, request.CustomerId, request.Notes, customerName: request.CustomerName);
         unitOfWork.Add(sale);
 
@@ -118,9 +123,10 @@ public class CreateSaleCommandHandler(
             Money? unitCost;
             if (product.IsDecant)
             {
-                // Costo = ml del decant × costo por ml del frasco
+                // Costo = líquido (ml × costo por ml del frasco) + frasquito (según tamaño)
                 var costPerMl = product.CostPerMl ?? 0m;
-                unitCost = Money.Of(mlPerUnit * costPerMl, request.Currency);
+                var vial = vialCosts.GetValueOrDefault(mlPerUnit, 0m);
+                unitCost = Money.Of(mlPerUnit * costPerMl + vial, request.Currency);
             }
             else
             {

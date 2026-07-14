@@ -74,6 +74,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     // Audit
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
+    // Config (clave-valor)
+    public DbSet<ChipoBackend.Domain.Entities.Config.AppSetting> AppSettings => Set<ChipoBackend.Domain.Entities.Config.AppSetting>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
