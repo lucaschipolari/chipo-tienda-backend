@@ -39,6 +39,11 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             money.Property(m => m.Currency).HasColumnName("compare_at_currency").HasMaxLength(3);
         });
 
+        // Decant (fraccionado por ml)
+        builder.Property(p => p.BottleCost).HasColumnType("decimal(12,2)");
+        builder.Ignore(p => p.CostPerMl);
+        builder.Ignore(p => p.IsBelowReorderMl);
+
         builder.HasMany(p => p.Variants).WithOne().HasForeignKey(v => v.ProductId);
         builder.HasMany(p => p.Images).WithOne().HasForeignKey(i => i.ProductId);
 

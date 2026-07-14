@@ -1,8 +1,10 @@
 using ChipoBackend.Application.Common.Exceptions;
 using ChipoBackend.Application.Common.Interfaces;
 using ChipoBackend.Application.Features.Sales.DTOs;
+using ChipoBackend.Domain.Entities.Catalog;
 using ChipoBackend.Domain.Entities.Inventory;
 using ChipoBackend.Domain.Entities.Sales;
+using System.Text.RegularExpressions;
 using ChipoBackend.Domain.Interfaces;
 using ChipoBackend.Domain.Interfaces.Repositories;
 using ChipoBackend.Domain.ValueObjects;
@@ -69,7 +71,7 @@ public class CreateSaleCommandHandler(
             return await HandleHistorical(request, ct);
 
         // Validar stock e ítems
-        var resolvedItems = new List<(CreateSaleItemRequest Req, string ProductName, string Sku, decimal? Cost)>();
+        var resolved = new List<(CreateSaleItemRequest Req, Product Product, ProductVariant Variant, int MlPerUnit)>();
         foreach (var itemReq in request.Items)
         {
             var product = await productRepository.GetWithVariantsAsync(itemReq.ProductId, ct)
@@ -81,10 +83,23 @@ public class CreateSaleCommandHandler(
             if (!variant.IsActive)
                 throw new ConflictException($"La variante '{variant.Sku}' no está activa.");
 
-            if (variant.StockQuantity < itemReq.Quantity)
-                throw new ConflictException($"Stock insuficiente para '{variant.Sku}'. Disponible: {variant.StockQuantity}.");
-
-            resolvedItems.Add((itemReq, product.Name, variant.Sku, variant.Cost?.Amount));
+            if (product.IsDecant)
+            {
+                // Decant: el stock se mide en ml (pool compartido del frasco)
+                var mlPerUnit = ParseMl(variant.Attributes);
+                var mlNeeded = mlPerUnit * itemReq.Quantity;
+                if (mlNeeded <= 0)
+                    throw new ConflictException($"La variante '{variant.Sku}' no tiene tamaño en ml definido.");
+                if (product.StockMl < mlNeeded)
+                    throw new ConflictException($"Stock insuficiente de '{product.Name}'. Disponible: {product.StockMl} ml, necesita: {mlNeeded} ml.");
+                resolved.Add((itemReq, product, variant, mlPerUnit));
+            }
+            else
+            {
+                if (variant.StockQuantity < itemReq.Quantity)
+                    throw new ConflictException($"Stock insuficiente para '{variant.Sku}'. Disponible: {variant.StockQuantity}.");
+                resolved.Add((itemReq, product, variant, 0));
+            }
         }
 
         var saleNumber = await saleRepository.GenerateSaleNumberAsync(ct);
@@ -95,30 +110,64 @@ public class CreateSaleCommandHandler(
         unitOfWork.Add(sale);
 
         // Agregar ítems y descontar stock
-        foreach (var (req, productName, sku, cost) in resolvedItems)
+        foreach (var (req, product, variant, mlPerUnit) in resolved)
         {
             var unitPrice = Money.Of(req.UnitPrice, request.Currency);
             var discount = Money.Of(req.Discount, request.Currency);
-            var unitCost = cost.HasValue ? Money.Of(cost.Value, request.Currency) : null;
-            sale.AddItem(req.ProductId, req.VariantId, productName, sku, req.Quantity, unitPrice, discount, unitCost);
 
-            // Descontar stock inmediatamente (venta directa)
-            var product = await productRepository.GetWithVariantsAsync(req.ProductId, ct);
-            var variant = product!.Variants.First(v => v.Id == req.VariantId);
-            var stockBefore = variant.StockQuantity;
-            variant.DecrementStock(req.Quantity);
+            Money? unitCost;
+            if (product.IsDecant)
+            {
+                // Costo = ml del decant × costo por ml del frasco
+                var costPerMl = product.CostPerMl ?? 0m;
+                unitCost = Money.Of(mlPerUnit * costPerMl, request.Currency);
+            }
+            else
+            {
+                unitCost = variant.Cost is { } c ? Money.Of(c.Amount, request.Currency) : null;
+            }
 
-            var movement = StockMovement.Create(
-                req.ProductId, req.VariantId, MovementType.SaleOut,
-                req.Quantity, stockBefore, variant.StockQuantity,
-                referenceType: "Sale",
-                reason: $"Venta {saleNumber}",
-                createdByUserId: userId);
-            unitOfWork.Add(movement);
+            sale.AddItem(req.ProductId, req.VariantId, product.Name, variant.Sku, req.Quantity, unitPrice, discount, unitCost);
+
+            if (product.IsDecant)
+            {
+                var mlNeeded = mlPerUnit * req.Quantity;
+                var beforeMl = product.StockMl;
+                product.DecrementMl(mlNeeded);
+                var movement = StockMovement.Create(
+                    req.ProductId, req.VariantId, MovementType.SaleOut,
+                    mlNeeded, beforeMl, product.StockMl,
+                    referenceType: "Sale", reason: $"Venta {saleNumber} ({mlNeeded} ml)",
+                    createdByUserId: userId);
+                unitOfWork.Add(movement);
+            }
+            else
+            {
+                var stockBefore = variant.StockQuantity;
+                variant.DecrementStock(req.Quantity);
+                var movement = StockMovement.Create(
+                    req.ProductId, req.VariantId, MovementType.SaleOut,
+                    req.Quantity, stockBefore, variant.StockQuantity,
+                    referenceType: "Sale", reason: $"Venta {saleNumber}",
+                    createdByUserId: userId);
+                unitOfWork.Add(movement);
+            }
         }
 
         await unitOfWork.SaveChangesAsync(ct);
         return sale.Id;
+    }
+
+    // Extrae los ml de una variante decant desde su atributo "Tamaño" (ej. "5ml" -> 5).
+    private static int ParseMl(Dictionary<string, string> attributes)
+    {
+        if (attributes == null) return 0;
+        foreach (var v in attributes.Values)
+        {
+            var m = Regex.Match(v ?? "", @"(\d+)\s*ml", RegexOptions.IgnoreCase);
+            if (m.Success) return int.Parse(m.Groups[1].Value);
+        }
+        return 0;
     }
 
     // ── Importación histórica ───────────────────────────────────────────────────

@@ -51,6 +51,13 @@ public record ProductDto(
     IReadOnlyList<ProductVariantDto> Variants,
     IReadOnlyList<ProductImageDto> Images,
     int TotalStock,
+    // Decant (fraccionado por ml)
+    bool IsDecant,
+    int StockMl,
+    decimal? BottleCost,
+    int? BottleMl,
+    int ReorderMl,
+    decimal? CostPerMl,
     DateTime CreatedAt,
     DateTime UpdatedAt);
 

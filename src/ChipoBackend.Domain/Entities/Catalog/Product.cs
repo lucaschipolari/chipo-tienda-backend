@@ -26,6 +26,19 @@ public class Product : AuditableEntity
     public List<string> Seasons { get; private set; } = [];       // Primavera, Verano, Otoño, Invierno
     public List<string> Occasions { get; private set; } = [];     // Día, Noche, Formal, Casual
 
+    // ── Decant (fraccionado por ml) ─────────────────────────────────────────
+    // Cuando IsDecant = true, el stock se maneja en ML (pool compartido) y el
+    // costo sale del frasco fuente: CostPerMl = BottleCost / BottleMl.
+    public bool IsDecant { get; private set; }
+    public int StockMl { get; private set; }                 // ml disponibles del frasco
+    public decimal? BottleCost { get; private set; }         // costo del frasco fuente (en la moneda del producto)
+    public int? BottleMl { get; private set; }               // ml del frasco fuente
+    public int ReorderMl { get; private set; }               // avisar cuando queden <= estos ml
+
+    /// <summary>Costo por ml (frasco/ml). Null si falta info.</summary>
+    public decimal? CostPerMl =>
+        (BottleCost is > 0 && BottleMl is > 0) ? BottleCost.Value / BottleMl.Value : null;
+
     public Category? Category { get; private set; }
 
     private readonly List<ProductVariant> _variants = [];
@@ -66,6 +79,33 @@ public class Product : AuditableEntity
         Tags = tags;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    /// <summary>Configura el producto como decant (fraccionado por ml) y sus datos de frasco/reposición.</summary>
+    public void ConfigureDecant(decimal? bottleCost, int? bottleMl, int reorderMl)
+    {
+        IsDecant = true;
+        BottleCost = bottleCost;
+        BottleMl = bottleMl;
+        ReorderMl = reorderMl < 0 ? 0 : reorderMl;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Fija el stock de ml del pool del decant.</summary>
+    public void SetStockMl(int ml)
+    {
+        StockMl = ml < 0 ? 0 : ml;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Descuenta ml del pool (al vender un decant).</summary>
+    public void DecrementMl(int ml)
+    {
+        StockMl -= ml;
+        if (StockMl < 0) StockMl = 0;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public bool IsBelowReorderMl => IsDecant && ReorderMl > 0 && StockMl <= ReorderMl;
 
     /// <summary>Setea el perfil olfativo. Listas nulas se tratan como vacías.</summary>
     public void SetOlfactoryProfile(

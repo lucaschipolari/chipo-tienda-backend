@@ -61,6 +61,12 @@ public class GetProductByIdQueryHandler(IProductRepository productRepository)
                 DisplayOrder: i.DisplayOrder
             )).ToList(),
             TotalStock: product.Variants.Sum(v => v.StockQuantity),
+            IsDecant: product.IsDecant,
+            StockMl: product.StockMl,
+            BottleCost: product.BottleCost,
+            BottleMl: product.BottleMl,
+            ReorderMl: product.ReorderMl,
+            CostPerMl: product.CostPerMl,
             CreatedAt: product.CreatedAt,
             UpdatedAt: product.UpdatedAt
         );

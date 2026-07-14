@@ -1,6 +1,7 @@
 using ChipoBackend.Application.Features.Products.Commands.AddProductImage;
 using ChipoBackend.Application.Features.Products.Commands.AddProductVariant;
 using ChipoBackend.Application.Features.Products.Commands.ChangeProductStatus;
+using ChipoBackend.Application.Features.Products.Commands.ConfigureDecant;
 using ChipoBackend.Application.Features.Products.Commands.RemoveProductImage;
 using ChipoBackend.Application.Features.Products.Commands.CreateProduct;
 using ChipoBackend.Application.Features.Products.Commands.UpdateProduct;
@@ -96,6 +97,15 @@ public class ProductsController : BaseApiController
         return NoContent();
     }
 
+    /// <summary>Configurar un producto como decant (por ml): frasco, stock en ml y reposición</summary>
+    [HttpPut("{productId:guid}/decant")]
+    [Authorize(Roles = "SuperAdmin,Admin,Supervisor")]
+    public async Task<IActionResult> ConfigureDecant(Guid productId, [FromBody] ProductDecantRequest request, CancellationToken ct)
+    {
+        await Mediator.Send(new ConfigureDecantCommand(productId, request.BottleCost, request.BottleMl, request.StockMl, request.ReorderMl), ct);
+        return NoContent();
+    }
+
     // ── Imágenes ─────────────────────────────────────────────────────────────
 
     /// <summary>Agregar una imagen (por URL; admite links de Google Drive) a un producto</summary>
@@ -119,3 +129,4 @@ public class ProductsController : BaseApiController
 
 public record ProductChangeStatusRequest(string Status);
 public record ProductAddImageRequest(string Url, string? AltText = null);
+public record ProductDecantRequest(decimal? BottleCost, int? BottleMl, int StockMl, int ReorderMl);

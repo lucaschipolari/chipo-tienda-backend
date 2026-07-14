@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using ChipoBackend.Domain.Interfaces.Repositories;
 using MediatR;
 
@@ -28,6 +29,25 @@ public class GetStockValuationQueryHandler(IProductRepository productRepository)
             if (string.Equals(p.Category?.Name, "Empaque", StringComparison.OrdinalIgnoreCase))
                 continue;
 
+            // Decants: el capital se calcula por ml del pool (no por variante).
+            if (p.IsDecant)
+            {
+                if (p.StockMl <= 0) continue;
+                if (p.CostPerMl is { } cpm) costValue += cpm * p.StockMl;
+                else withoutCost++;
+                // valor de venta estimado: mejor precio por ml entre las presentaciones
+                decimal bestPricePerMl = 0;
+                foreach (var v in p.Variants.Where(v => v.IsActive))
+                {
+                    var ml = ParseMl(v.Attributes);
+                    if (ml <= 0) continue;
+                    var ppm = (v.Price?.Amount ?? p.BasePrice.Amount) / ml;
+                    if (ppm > bestPricePerMl) bestPricePerMl = ppm;
+                }
+                retailValue += bestPricePerMl * p.StockMl;
+                continue;
+            }
+
             foreach (var v in p.Variants.Where(v => v.IsActive && v.StockQuantity > 0))
             {
                 units += v.StockQuantity;
@@ -42,5 +62,16 @@ public class GetStockValuationQueryHandler(IProductRepository productRepository)
         }
 
         return new StockValuationDto(costValue, retailValue, units, withoutCost);
+    }
+
+    private static int ParseMl(Dictionary<string, string> attributes)
+    {
+        if (attributes == null) return 0;
+        foreach (var v in attributes.Values)
+        {
+            var m = Regex.Match(v ?? "", @"(\d+)\s*ml", RegexOptions.IgnoreCase);
+            if (m.Success) return int.Parse(m.Groups[1].Value);
+        }
+        return 0;
     }
 }
