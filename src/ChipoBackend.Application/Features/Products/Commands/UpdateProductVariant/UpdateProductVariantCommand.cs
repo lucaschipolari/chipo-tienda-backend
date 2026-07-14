@@ -16,7 +16,8 @@ public record UpdateProductVariantCommand(
     bool IsActive,
     decimal? CompareAtPrice = null,
     decimal? Cost = null,
-    Dictionary<string, string>? Attributes = null
+    Dictionary<string, string>? Attributes = null,
+    int? DisplayOrder = null
 ) : IRequest;
 
 public class UpdateProductVariantCommandValidator : AbstractValidator<UpdateProductVariantCommand>
@@ -55,6 +56,9 @@ public class UpdateProductVariantCommandHandler(
 
         if (request.Attributes is not null)
             variant.UpdateAttributes(request.Attributes);
+
+        if (request.DisplayOrder.HasValue)
+            variant.SetDisplayOrder(request.DisplayOrder.Value);
 
         if (request.IsActive && !variant.IsActive) variant.Activate();
         else if (!request.IsActive && variant.IsActive) variant.Deactivate();

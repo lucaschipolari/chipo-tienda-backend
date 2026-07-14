@@ -14,6 +14,7 @@ public class ProductVariant : BaseEntity
     public Money? Cost { get; private set; }             // costo de reposición (para calcular ganancia)
     public int StockQuantity { get; private set; }
     public int MinStockThreshold { get; private set; } = 5;
+    public int DisplayOrder { get; private set; }          // orden de la variante (menor primero)
     public bool IsActive { get; private set; } = true;
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
@@ -40,6 +41,12 @@ public class ProductVariant : BaseEntity
     public void UpdateAttributes(Dictionary<string, string> attributes)
     {
         Attributes = attributes ?? [];
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetDisplayOrder(int order)
+    {
+        DisplayOrder = order;
         UpdatedAt = DateTime.UtcNow;
     }
 

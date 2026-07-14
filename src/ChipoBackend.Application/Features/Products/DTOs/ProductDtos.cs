@@ -22,6 +22,7 @@ public record ProductVariantDto(
     string Currency,
     int StockQuantity,
     int MinStockThreshold,
+    int DisplayOrder,
     bool IsActive,
     bool IsBelowMinStock,
     DateTime CreatedAt,

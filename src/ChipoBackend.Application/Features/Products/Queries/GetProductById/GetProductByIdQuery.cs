@@ -38,7 +38,10 @@ public class GetProductByIdQueryHandler(IProductRepository productRepository)
                 Longevity: product.Longevity,
                 Seasons: product.Seasons,
                 Occasions: product.Occasions),
-            Variants: product.Variants.Select(v => new ProductVariantDto(
+            Variants: product.Variants
+                .OrderBy(v => v.DisplayOrder)
+                .ThenBy(v => Ml(v.Attributes))
+                .Select(v => new ProductVariantDto(
                 Id: v.Id,
                 ProductId: v.ProductId,
                 Sku: v.Sku,
@@ -53,6 +56,7 @@ public class GetProductByIdQueryHandler(IProductRepository productRepository)
                     ? (Ml(v.Attributes) > 0 ? product.StockMl / Ml(v.Attributes) : 0)
                     : v.StockQuantity,
                 MinStockThreshold: v.MinStockThreshold,
+                DisplayOrder: v.DisplayOrder,
                 IsActive: v.IsActive,
                 IsBelowMinStock: v.IsBelowMinStock,
                 CreatedAt: v.CreatedAt,
