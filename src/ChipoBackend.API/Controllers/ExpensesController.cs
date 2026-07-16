@@ -1,5 +1,6 @@
 using ChipoBackend.Application.Features.Expenses.Commands.ChangeExpenseStatus;
 using ChipoBackend.Application.Features.Expenses.Commands.CreateExpense;
+using ChipoBackend.Application.Features.Expenses.Commands.DeleteExpense;
 using ChipoBackend.Application.Features.Expenses.Commands.UpdateExpense;
 using ChipoBackend.Application.Features.Expenses.Queries.GetExpenseDashboard;
 using ChipoBackend.Application.Features.Expenses.Queries.GetExpenseById;
@@ -70,6 +71,15 @@ public class ExpensesController : BaseApiController
     public async Task<IActionResult> ChangeStatus(Guid id, [FromBody] ChangeExpenseStatusRequest body, CancellationToken ct)
     {
         await Mediator.Send(new ChangeExpenseStatusCommand(id, body.NewStatus), ct);
+        return NoContent();
+    }
+
+    // DELETE api/expenses/{id} — borrado físico, solo administradores
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        await Mediator.Send(new DeleteExpenseCommand(id), ct);
         return NoContent();
     }
 }
