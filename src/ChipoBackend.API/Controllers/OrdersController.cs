@@ -1,5 +1,6 @@
 using ChipoBackend.Application.Features.Orders.Commands.ChangeOrderStatus;
 using ChipoBackend.Application.Features.Orders.Commands.CreateOrder;
+using ChipoBackend.Application.Features.Orders.Commands.DeleteOrder;
 using ChipoBackend.Application.Features.Orders.Queries.GetOrderById;
 using ChipoBackend.Application.Features.Orders.Queries.GetOrderByNumber;
 using ChipoBackend.Application.Features.Orders.Queries.GetOrders;
@@ -98,6 +99,15 @@ public class OrdersController : BaseApiController
         Guid id, [FromBody] OrderStatusChangeRequest request, CancellationToken ct)
     {
         await Mediator.Send(new ChangeOrderStatusCommand(id, request.NewStatus, request.Note), ct);
+        return NoContent();
+    }
+
+    /// <summary>Eliminar físicamente un pedido (solo Admin) — para limpiar pruebas.</summary>
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        await Mediator.Send(new DeleteOrderCommand(id), ct);
         return NoContent();
     }
 }
