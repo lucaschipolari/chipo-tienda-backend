@@ -19,7 +19,8 @@ public record AnalyticsSummaryDto(
     int UniqueVisitors,
     int UniqueProductsViewed,
     double ViewToCartRate,          // % vistas que terminaron en carrito
-    double ViewsVsPreviousPeriod    // variación % vs período anterior
+    double ViewsVsPreviousPeriod,   // variación % vs período anterior
+    int TotalUnitsSold              // unidades vendidas (ventas reales) en el período
 );
 
 public record AnalyticsDashboardDto(
@@ -29,6 +30,7 @@ public record AnalyticsDashboardDto(
     IReadOnlyList<ProductStatDto> TopViewed,
     IReadOnlyList<ProductStatDto> TopAddedToCart,
     IReadOnlyList<ProductStatDto> TopFavorited,
+    IReadOnlyList<ProductStatDto> TopSold,
     IReadOnlyList<SearchStatDto> TopSearches,
     IReadOnlyList<SearchStatDto> NoResultSearches
 );

@@ -9,7 +9,8 @@ public record GetAnalyticsDashboardQuery(DateTime From, DateTime To) : IRequest<
 
 public class GetAnalyticsDashboardQueryHandler(
     IAnalyticsEventRepository analytics,
-    IProductRepository products
+    IProductRepository products,
+    ISaleRepository sales
 ) : IRequestHandler<GetAnalyticsDashboardQuery, AnalyticsDashboardDto>
 {
     public async Task<AnalyticsDashboardDto> Handle(GetAnalyticsDashboardQuery request, CancellationToken ct)
@@ -64,6 +65,20 @@ public class GetAnalyticsDashboardQueryHandler(
         var topCart = cartCounts.Select(c => Map(c, true)).ToList();
         var topFav = favCounts.Select(c => Map(c, false)).ToList();
 
+        // Ventas reales del período (para cruzar "más visto" con "más vendido")
+        var salesSummary = await sales.GetSummaryAsync(from, to, ct);
+        var topSold = salesSummary.TopProducts
+            .OrderByDescending(p => p.Quantity)
+            .Take(10)
+            .Select(p =>
+            {
+                var views = viewsMap.GetValueOrDefault(p.ProductId, 0);
+                double? conv = views > 0 ? Math.Round((double)p.Quantity / views * 100, 1) : null;
+                return new ProductStatDto(p.ProductId, p.ProductName, null, p.Quantity, views, conv);
+            })
+            .ToList();
+        var totalUnitsSold = salesSummary.TopProducts.Sum(p => p.Quantity);
+
         var topSearches = (await analytics.TopSearchesAsync(from, to, 15, false, ct))
             .Select(s => new SearchStatDto(s.Term, s.Count, s.NoResultCount)).ToList();
         var noResult = (await analytics.TopSearchesAsync(from, to, 15, true, ct))
@@ -71,8 +86,8 @@ public class GetAnalyticsDashboardQueryHandler(
 
         var summary = new AnalyticsSummaryDto(
             totalViews, totalCart, totalFav, totalSearch,
-            uniqueVisitors, uniqueProducts, viewToCart, viewsTrend);
+            uniqueVisitors, uniqueProducts, viewToCart, viewsTrend, totalUnitsSold);
 
-        return new AnalyticsDashboardDto(from, to, summary, topViewed, topCart, topFav, topSearches, noResult);
+        return new AnalyticsDashboardDto(from, to, summary, topViewed, topCart, topFav, topSold, topSearches, noResult);
     }
 }
