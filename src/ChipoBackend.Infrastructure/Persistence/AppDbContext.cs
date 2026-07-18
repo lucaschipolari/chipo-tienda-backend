@@ -77,6 +77,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     // Config (clave-valor)
     public DbSet<ChipoBackend.Domain.Entities.Config.AppSetting> AppSettings => Set<ChipoBackend.Domain.Entities.Config.AppSetting>();
 
+    // Analítica (eventos anónimos de interacción)
+    public DbSet<ChipoBackend.Domain.Entities.Analytics.AnalyticsEvent> AnalyticsEvents => Set<ChipoBackend.Domain.Entities.Analytics.AnalyticsEvent>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
