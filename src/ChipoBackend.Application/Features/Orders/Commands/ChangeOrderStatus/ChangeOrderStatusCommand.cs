@@ -111,6 +111,24 @@ public class ChangeOrderStatusCommandHandler(
             var variant = product.Variants.FirstOrDefault(v => v.Id == item.VariantId);
             if (variant == null) continue;
 
+            if (product.IsDecant)
+            {
+                // Decant: descuenta del pool de ml, no del stock de variante.
+                var mlNeeded = ParseMl(variant.Attributes) * item.Quantity;
+                if (mlNeeded <= 0) continue;
+                if (product.StockMl < mlNeeded)
+                    throw new ConflictException($"Stock insuficiente de '{product.Name}'. Disponible: {product.StockMl} ml, necesita: {mlNeeded} ml.");
+                var mlBefore = product.StockMl;
+                product.DecrementMl(mlNeeded);
+                unitOfWork.Add(StockMovement.Create(
+                    product.Id, variant.Id, MovementType.SaleOut,
+                    mlNeeded, mlBefore, product.StockMl,
+                    referenceId: order.Id, referenceType: "Order",
+                    reason: $"Pedido {order.OrderNumber} confirmado ({mlNeeded} ml)",
+                    createdByUserId: null));
+                continue;
+            }
+
             if (variant.StockQuantity < item.Quantity)
                 throw new ConflictException($"Stock insuficiente para '{item.Sku}'. Disponible: {variant.StockQuantity}.");
 
@@ -138,6 +156,22 @@ public class ChangeOrderStatusCommandHandler(
             var variant = product.Variants.FirstOrDefault(v => v.Id == item.VariantId);
             if (variant == null) continue;
 
+            if (product.IsDecant)
+            {
+                // Decant: devuelve los ml al pool.
+                var mlBack = ParseMl(variant.Attributes) * item.Quantity;
+                if (mlBack <= 0) continue;
+                var mlBefore = product.StockMl;
+                product.SetStockMl(product.StockMl + mlBack);
+                unitOfWork.Add(StockMovement.Create(
+                    product.Id, variant.Id, MovementType.Return,
+                    mlBack, mlBefore, product.StockMl,
+                    referenceId: order.Id, referenceType: "Order",
+                    reason: $"Pedido {order.OrderNumber} cancelado — {mlBack} ml restaurados",
+                    createdByUserId: null));
+                continue;
+            }
+
             var stockBefore = variant.StockQuantity;
             variant.IncrementStock(item.Quantity);
 
@@ -150,5 +184,18 @@ public class ChangeOrderStatusCommandHandler(
                 createdByUserId: null);
             unitOfWork.Add(movement);
         }
+    }
+
+    // Extrae los ml de una variante decant desde su atributo "Tamaño" (ej. "5ml" -> 5).
+    private static int ParseMl(Dictionary<string, string> attributes)
+    {
+        if (attributes == null) return 0;
+        foreach (var v in attributes.Values)
+        {
+            var m = System.Text.RegularExpressions.Regex.Match(v ?? "", @"(\d+)\s*ml",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            if (m.Success) return int.Parse(m.Groups[1].Value);
+        }
+        return 0;
     }
 }
