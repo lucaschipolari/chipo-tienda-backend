@@ -85,8 +85,21 @@ public class CreateOrderCommandHandler(
             if (!variant.IsActive)
                 throw new ConflictException($"La variante '{variant.Sku}' no está activa.");
 
-            if (variant.StockQuantity < itemReq.Quantity)
+            if (product.IsDecant)
+            {
+                // Decant: el stock se mide en ml (pool compartido del frasco),
+                // no por cantidad de variante (que siempre es 0 en decants).
+                var mlPerUnit = ParseMl(variant.Attributes);
+                var mlNeeded = mlPerUnit * itemReq.Quantity;
+                if (mlNeeded <= 0)
+                    throw new ConflictException($"La variante '{variant.Sku}' no tiene tamaño en ml definido.");
+                if (product.StockMl < mlNeeded)
+                    throw new ConflictException($"Stock insuficiente de '{product.Name}'. Disponible: {product.StockMl} ml, necesita: {mlNeeded} ml.");
+            }
+            else if (variant.StockQuantity < itemReq.Quantity)
+            {
                 throw new ConflictException($"Stock insuficiente para '{variant.Sku}'. Disponible: {variant.StockQuantity}, solicitado: {itemReq.Quantity}.");
+            }
 
             // Always express the price in the order's requested currency.
             // Treat variant.Price = 0 as "not set" and fall back to product.BasePrice.
@@ -139,5 +152,18 @@ public class CreateOrderCommandHandler(
 
         await unitOfWork.SaveChangesAsync(ct);
         return order.Id;
+    }
+
+    // Extrae los ml de una variante decant desde su atributo "Tamaño" (ej. "5ml" -> 5).
+    private static int ParseMl(Dictionary<string, string> attributes)
+    {
+        if (attributes == null) return 0;
+        foreach (var v in attributes.Values)
+        {
+            var m = System.Text.RegularExpressions.Regex.Match(v ?? "", @"(\d+)\s*ml",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            if (m.Success) return int.Parse(m.Groups[1].Value);
+        }
+        return 0;
     }
 }
