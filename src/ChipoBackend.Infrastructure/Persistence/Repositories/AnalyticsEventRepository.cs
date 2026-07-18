@@ -28,13 +28,14 @@ public class AnalyticsEventRepository(AppDbContext context) : IAnalyticsEventRep
     public async Task<IReadOnlyList<ProductEventCount>> TopProductsAsync(
         AnalyticsEventType type, DateTime from, DateTime to, int take, CancellationToken ct = default)
     {
-        return await context.AnalyticsEvents
+        var rows = await context.AnalyticsEvents
             .Where(e => e.Type == type && e.ProductId != null && e.CreatedAt >= from && e.CreatedAt <= to)
             .GroupBy(e => e.ProductId!.Value)
-            .Select(g => new ProductEventCount(g.Key, g.Count()))
+            .Select(g => new { ProductId = g.Key, Count = g.Count() })
             .OrderByDescending(x => x.Count)
             .Take(take)
             .ToListAsync(ct);
+        return rows.Select(r => new ProductEventCount(r.ProductId, r.Count)).ToList();
     }
 
     public async Task<IReadOnlyList<SearchTermCount>> TopSearchesAsync(
@@ -46,14 +47,17 @@ public class AnalyticsEventRepository(AppDbContext context) : IAnalyticsEventRep
         if (noResultOnly)
             q = q.Where(e => e.ResultCount == 0);
 
-        return await q
+        var rows = await q
             .GroupBy(e => e.SearchTerm!)
-            .Select(g => new SearchTermCount(
-                g.Key,
-                g.Count(),
-                g.Count(x => x.ResultCount == 0)))
+            .Select(g => new
+            {
+                Term = g.Key,
+                Count = g.Count(),
+                NoResult = g.Count(x => x.ResultCount == 0),
+            })
             .OrderByDescending(x => x.Count)
             .Take(take)
             .ToListAsync(ct);
+        return rows.Select(r => new SearchTermCount(r.Term, r.Count, r.NoResult)).ToList();
     }
 }
