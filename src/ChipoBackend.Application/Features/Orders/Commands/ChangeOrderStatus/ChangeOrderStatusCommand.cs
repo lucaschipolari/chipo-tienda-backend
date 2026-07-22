@@ -1,9 +1,12 @@
 using ChipoBackend.Application.Common.Exceptions;
 using ChipoBackend.Application.Common.Interfaces;
+using ChipoBackend.Application.Features.Settings;
 using ChipoBackend.Domain.Entities.Inventory;
 using ChipoBackend.Domain.Entities.Orders;
+using ChipoBackend.Domain.Entities.Sales;
 using ChipoBackend.Domain.Interfaces;
 using ChipoBackend.Domain.Interfaces.Repositories;
+using ChipoBackend.Domain.ValueObjects;
 using FluentValidation;
 using MediatR;
 
@@ -33,6 +36,8 @@ public class ChangeOrderStatusCommandHandler(
     IOrderRepository orderRepository,
     IProductRepository productRepository,
     IStockMovementRepository stockMovementRepository,
+    ISaleRepository saleRepository,
+    IAppSettingRepository appSettings,
     ICurrentUserService currentUser,
     IUnitOfWork unitOfWork
 ) : IRequestHandler<ChangeOrderStatusCommand>
@@ -55,6 +60,13 @@ public class ChangeOrderStatusCommandHandler(
 
             case "paid":
                 order.MarkAsPaid(userId);
+                // Si aún no se descontó stock (no pasó por Confirmado), descontarlo ahora.
+                if (previousStatus < OrderStatus.Confirmed)
+                    await DeductStockForOrderAsync(order, ct);
+                // Convertir el pedido en una venta (para que sume a la ganancia).
+                // Solo la primera vez que pasa a Pagado.
+                if (previousStatus != OrderStatus.Paid)
+                    await CreateSaleFromOrderAsync(order, ct);
                 break;
 
             case "processing":
@@ -183,6 +195,52 @@ public class ChangeOrderStatusCommandHandler(
                 reason: $"Pedido {order.OrderNumber} cancelado — stock restaurado",
                 createdByUserId: null);
             unitOfWork.Add(movement);
+        }
+    }
+
+    /// <summary>
+    /// Crea una Venta a partir de un pedido pagado, para que impacte en la
+    /// facturación y la ganancia. NO descuenta stock: de eso ya se encarga el
+    /// pedido al confirmarse (evita el doble descuento).
+    /// </summary>
+    private async Task CreateSaleFromOrderAsync(Order order, CancellationToken ct)
+    {
+        var saleNumber = await saleRepository.GenerateSaleNumberAsync(ct);
+        var userId = currentUser.UserId ?? Guid.Empty;
+        var vialCosts = VialCostSettings.Parse((await appSettings.GetAsync(VialCostSettings.Key, ct))?.Value);
+
+        var sale = Sale.Create(
+            saleNumber, userId,
+            paymentMethod: order.PaymentMethod ?? "Transfer",
+            channel: SaleChannel.WhatsApp,
+            currency: order.Currency,
+            customerId: order.CustomerId,
+            notes: $"Generada desde el pedido {order.OrderNumber}",
+            customerName: order.BuyerName);
+        unitOfWork.Add(sale);
+
+        foreach (var item in order.Items)
+        {
+            var product = await productRepository.GetWithVariantsAsync(item.ProductId, ct);
+            var variant = product?.Variants.FirstOrDefault(v => v.Id == item.VariantId);
+
+            Money? unitCost = null;
+            if (product != null && variant != null)
+            {
+                if (product.IsDecant)
+                {
+                    var mlPerUnit = ParseMl(variant.Attributes);
+                    var vial = vialCosts.GetValueOrDefault(mlPerUnit, 0m);
+                    unitCost = Money.Of(mlPerUnit * (product.CostPerMl ?? 0m) + vial, order.Currency);
+                }
+                else if (variant.Cost is { } c)
+                {
+                    unitCost = Money.Of(c.Amount, order.Currency);
+                }
+            }
+
+            sale.AddItem(item.ProductId, item.VariantId, item.ProductName, item.Sku,
+                item.Quantity, item.UnitPrice, item.Discount, unitCost);
         }
     }
 
