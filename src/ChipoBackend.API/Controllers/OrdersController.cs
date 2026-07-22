@@ -1,6 +1,7 @@
 using ChipoBackend.Application.Features.Orders.Commands.ChangeOrderStatus;
 using ChipoBackend.Application.Features.Orders.Commands.CreateOrder;
 using ChipoBackend.Application.Features.Orders.Commands.DeleteOrder;
+using ChipoBackend.Application.Features.Orders.Commands.GenerateSaleFromOrder;
 using ChipoBackend.Application.Features.Orders.Queries.GetOrderById;
 using ChipoBackend.Application.Features.Orders.Queries.GetOrderByNumber;
 using ChipoBackend.Application.Features.Orders.Queries.GetOrders;
@@ -100,6 +101,15 @@ public class OrdersController : BaseApiController
     {
         await Mediator.Send(new ChangeOrderStatusCommand(id, request.NewStatus, request.Note), ct);
         return NoContent();
+    }
+
+    /// <summary>Generar (o recuperar) la venta de un pedido. Idempotente. Solo Admin.</summary>
+    [HttpPost("{id:guid}/generate-sale")]
+    [Authorize(Roles = "SuperAdmin,Admin,Supervisor")]
+    public async Task<IActionResult> GenerateSale(Guid id, CancellationToken ct)
+    {
+        var saleId = await Mediator.Send(new GenerateSaleFromOrderCommand(id), ct);
+        return Ok(new { saleId });
     }
 
     /// <summary>Eliminar físicamente un pedido (solo Admin) — para limpiar pruebas.</summary>
