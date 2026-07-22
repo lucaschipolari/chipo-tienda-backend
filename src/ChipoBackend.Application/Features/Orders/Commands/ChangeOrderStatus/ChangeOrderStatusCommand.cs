@@ -88,6 +88,8 @@ public class ChangeOrderStatusCommandHandler(
                 // Restaurar stock si ya se había descontado (estaba Confirmed o más)
                 if (previousStatus >= OrderStatus.Confirmed)
                     await RestoreStockForOrderAsync(order, ct);
+                // Anular la venta generada (si el pedido ya había sido pagado)
+                await VoidSaleForOrderAsync(order.Id, ct);
                 break;
 
             case "refunded":
@@ -96,6 +98,7 @@ public class ChangeOrderStatusCommandHandler(
                     throw new ConflictException("Solo se puede reembolsar un pedido entregado o pagado.");
                 // Usamos el evento de cancelación para registrar el cambio
                 order.Cancel("Pedido reembolsado", userId);
+                await VoidSaleForOrderAsync(order.Id, ct);
                 break;
 
             default:
@@ -217,6 +220,7 @@ public class ChangeOrderStatusCommandHandler(
             customerId: order.CustomerId,
             notes: $"Generada desde el pedido {order.OrderNumber}",
             customerName: order.BuyerName);
+        sale.LinkOrder(order.Id);
         unitOfWork.Add(sale);
 
         foreach (var item in order.Items)
@@ -242,6 +246,18 @@ public class ChangeOrderStatusCommandHandler(
             sale.AddItem(item.ProductId, item.VariantId, item.ProductName, item.Sku,
                 item.Quantity, item.UnitPrice, item.Discount, unitCost);
         }
+    }
+
+    /// <summary>
+    /// Anula (borra) la venta generada por un pedido, si existe. No toca stock:
+    /// esa venta nunca descontó inventario (lo maneja el pedido), y la restauración
+    /// de stock ya la hace la cancelación del pedido.
+    /// </summary>
+    private async Task VoidSaleForOrderAsync(Guid orderId, CancellationToken ct)
+    {
+        var sale = await saleRepository.GetByOrderIdAsync(orderId, ct);
+        if (sale != null)
+            saleRepository.Remove(sale);
     }
 
     // Extrae los ml de una variante decant desde su atributo "Tamaño" (ej. "5ml" -> 5).

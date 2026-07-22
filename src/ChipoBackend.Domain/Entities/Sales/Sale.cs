@@ -15,6 +15,10 @@ public class Sale : AuditableEntity
     public Money Total { get; private set; } = null!;
     public string PaymentMethod { get; private set; } = null!;
     public string? Notes { get; private set; }
+    /// <summary>Pedido del que se generó esta venta (si vino de la tienda web).</summary>
+    public Guid? OrderId { get; private set; }
+
+    public void LinkOrder(Guid orderId) => OrderId = orderId;
 
     private readonly List<SaleItem> _items = [];
     public IReadOnlyCollection<SaleItem> Items => _items.AsReadOnly();

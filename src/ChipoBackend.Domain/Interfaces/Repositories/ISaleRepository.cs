@@ -5,6 +5,7 @@ namespace ChipoBackend.Domain.Interfaces.Repositories;
 public interface ISaleRepository : IRepository<Sale>
 {
     Task<Sale?> GetWithItemsAsync(Guid id, CancellationToken ct = default);
+    Task<Sale?> GetByOrderIdAsync(Guid orderId, CancellationToken ct = default);
     Task<(IReadOnlyList<Sale> Items, int TotalCount)> GetPagedAsync(
         int page, int pageSize,
         Guid? customerId = null,

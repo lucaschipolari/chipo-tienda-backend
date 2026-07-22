@@ -15,6 +15,7 @@ public class SaleConfiguration : IEntityTypeConfiguration<Sale>
         builder.Property(s => s.CustomerName).HasMaxLength(150);
         builder.Property(s => s.Channel).HasConversion<string>().HasMaxLength(30);
         builder.Property(s => s.PaymentMethod).HasMaxLength(30).IsRequired();
+        builder.HasIndex(s => s.OrderId);
         builder.OwnsOne(s => s.Subtotal, m => { m.Property(x => x.Amount).HasColumnName("subtotal").HasColumnType("decimal(12,2)"); m.Property(x => x.Currency).HasColumnName("subtotal_currency").HasMaxLength(3); });
         builder.OwnsOne(s => s.DiscountAmount, m => { m.Property(x => x.Amount).HasColumnName("discount_amount").HasColumnType("decimal(12,2)"); m.Property(x => x.Currency).HasColumnName("discount_currency").HasMaxLength(3); });
         builder.OwnsOne(s => s.Total, m => { m.Property(x => x.Amount).HasColumnName("total").HasColumnType("decimal(12,2)"); m.Property(x => x.Currency).HasColumnName("total_currency").HasMaxLength(3); });
