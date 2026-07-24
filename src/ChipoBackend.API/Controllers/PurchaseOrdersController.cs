@@ -1,6 +1,7 @@
 using ChipoBackend.Application.Features.PurchaseOrders.Commands.ApprovePurchaseOrder;
 using ChipoBackend.Application.Features.PurchaseOrders.Commands.CancelPurchaseOrder;
 using ChipoBackend.Application.Features.PurchaseOrders.Commands.CreatePurchaseOrder;
+using ChipoBackend.Application.Features.PurchaseOrders.Commands.DeletePurchaseOrder;
 using ChipoBackend.Application.Features.PurchaseOrders.Commands.UpdatePurchaseOrder;
 using ChipoBackend.Application.Features.PurchaseOrders.Commands.ReceivePurchaseOrder;
 using ChipoBackend.Application.Features.PurchaseOrders.Commands.SendPurchaseOrder;
@@ -81,6 +82,15 @@ public class PurchaseOrdersController : BaseApiController
         Guid id, [FromBody] ReceiveItemsRequest request, CancellationToken ct)
     {
         await Mediator.Send(new ReceivePurchaseOrderCommand(id, request.ItemReceipts), ct);
+        return NoContent();
+    }
+
+    /// <summary>Eliminar físicamente una orden (solo Admin) — para limpiar pruebas.</summary>
+    [HttpDelete("{id:guid}/permanent")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
+    public async Task<IActionResult> DeletePermanent(Guid id, CancellationToken ct)
+    {
+        await Mediator.Send(new DeletePurchaseOrderCommand(id), ct);
         return NoContent();
     }
 
