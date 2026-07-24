@@ -52,6 +52,12 @@ public class UpdatePurchaseOrderCommandHandler(
         foreach (var item in request.Items)
             order.AddItem(item.ProductId, item.VariantId, item.Quantity, Money.Of(item.UnitCost, request.Currency));
 
+        // Forzar estado Added de los ítems nuevos: tras Clear+Add, EF puede
+        // detectarlos como Modified (UPDATE que afecta 0 filas). Igual que se hace
+        // con StatusHistory en pedidos.
+        foreach (var it in order.Items)
+            unitOfWork.Add(it);
+
         await unitOfWork.SaveChangesAsync(ct);
     }
 }
