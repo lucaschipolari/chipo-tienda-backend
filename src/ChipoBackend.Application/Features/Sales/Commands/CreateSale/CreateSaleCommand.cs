@@ -111,7 +111,10 @@ public class CreateSaleCommandHandler(
         // Costo de frasquitos por tamaño (global) — se suma al costo de cada decant
         var vialCosts = VialCostSettings.Parse((await appSettings.GetAsync(VialCostSettings.Key, ct))?.Value);
 
-        var sale = Sale.Create(saleNumber, userId, request.PaymentMethod, channel, request.Currency, request.CustomerId, request.Notes, customerName: request.CustomerName);
+        var saleDate = request.SaleDate.HasValue
+            ? DateTime.SpecifyKind(request.SaleDate.Value, DateTimeKind.Utc)
+            : (DateTime?)null;
+        var sale = Sale.Create(saleNumber, userId, request.PaymentMethod, channel, request.Currency, request.CustomerId, request.Notes, createdAt: saleDate, customerName: request.CustomerName);
         unitOfWork.Add(sale);
 
         // Agregar ítems y descontar stock
