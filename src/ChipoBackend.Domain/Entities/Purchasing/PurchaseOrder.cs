@@ -47,6 +47,25 @@ public class PurchaseOrder : AuditableEntity
         RecalculateTotals();
     }
 
+    /// <summary>Quita todos los ítems (solo en Borrador). Útil para reeditar.</summary>
+    public void ClearItems()
+    {
+        EnsureStatus(PurchaseOrderStatus.Draft);
+        _items.Clear();
+        RecalculateTotals();
+    }
+
+    /// <summary>Actualiza los datos de cabecera de un borrador.</summary>
+    public void UpdateHeader(DateTime? expectedDeliveryDate, string? notes, string currency)
+    {
+        EnsureStatus(PurchaseOrderStatus.Draft);
+        ExpectedDeliveryDate = expectedDeliveryDate;
+        Notes = notes;
+        Currency = currency;
+        RecalculateTotals();
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void Send()
     {
         EnsureStatus(PurchaseOrderStatus.Draft);

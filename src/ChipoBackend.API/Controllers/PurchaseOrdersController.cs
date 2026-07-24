@@ -1,6 +1,7 @@
 using ChipoBackend.Application.Features.PurchaseOrders.Commands.ApprovePurchaseOrder;
 using ChipoBackend.Application.Features.PurchaseOrders.Commands.CancelPurchaseOrder;
 using ChipoBackend.Application.Features.PurchaseOrders.Commands.CreatePurchaseOrder;
+using ChipoBackend.Application.Features.PurchaseOrders.Commands.UpdatePurchaseOrder;
 using ChipoBackend.Application.Features.PurchaseOrders.Commands.ReceivePurchaseOrder;
 using ChipoBackend.Application.Features.PurchaseOrders.Commands.SendPurchaseOrder;
 using ChipoBackend.Application.Features.PurchaseOrders.DTOs;
@@ -43,6 +44,16 @@ public class PurchaseOrdersController : BaseApiController
     {
         var id = await Mediator.Send(command, ct);
         return CreatedAtAction(nameof(GetById), new { id }, new { id });
+    }
+
+    /// <summary>Editar una orden de compra en estado Borrador</summary>
+    [HttpPut("{id:guid}")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdatePurchaseOrderCommand command, CancellationToken ct)
+    {
+        if (id != command.Id) return BadRequest("El ID de la ruta no coincide con el del body.");
+        await Mediator.Send(command, ct);
+        return NoContent();
     }
 
     /// <summary>Enviar la orden al proveedor (Draft → Sent)</summary>
