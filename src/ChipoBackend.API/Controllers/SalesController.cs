@@ -1,5 +1,6 @@
 using ChipoBackend.Application.Features.Sales.Commands.CreateSale;
 using ChipoBackend.Application.Features.Sales.Commands.DeleteSale;
+using ChipoBackend.Application.Features.Sales.Commands.UpdateSale;
 using ChipoBackend.Application.Features.Sales.Queries.GetSaleById;
 using ChipoBackend.Application.Features.Sales.Queries.GetSales;
 using ChipoBackend.Application.Features.Sales.Queries.GetSalesReport;
@@ -40,6 +41,16 @@ public class SalesController : BaseApiController
     {
         var id = await Mediator.Send(command, ct);
         return CreatedAtAction(nameof(GetById), new { id }, new { id });
+    }
+
+    /// <summary>Editar datos de una venta (fecha, pago, notas, cliente)</summary>
+    [HttpPut("{id:guid}")]
+    [Authorize(Roles = "SuperAdmin,Admin,Supervisor")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateSaleCommand command, CancellationToken ct)
+    {
+        if (id != command.Id) return BadRequest("El ID de la ruta no coincide con el del body.");
+        await Mediator.Send(command, ct);
+        return NoContent();
     }
 
     /// <summary>Eliminar una venta</summary>

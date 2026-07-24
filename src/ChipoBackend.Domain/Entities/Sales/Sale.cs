@@ -20,6 +20,16 @@ public class Sale : AuditableEntity
 
     public void LinkOrder(Guid orderId) => OrderId = orderId;
 
+    /// <summary>Edita datos de cabecera de la venta (no toca ítems ni stock).</summary>
+    public void UpdateInfo(string paymentMethod, string? notes, string? customerName, DateTime? createdAt)
+    {
+        PaymentMethod = paymentMethod;
+        Notes = notes;
+        CustomerName = customerName;
+        if (createdAt.HasValue) CreatedAt = createdAt.Value;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     private readonly List<SaleItem> _items = [];
     public IReadOnlyCollection<SaleItem> Items => _items.AsReadOnly();
 
