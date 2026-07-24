@@ -39,5 +39,6 @@ public class SaleItem : BaseEntity
     public Money TotalCost => UnitCost * Quantity;
 
     /// <summary>Ganancia de la línea (total cobrado − costo total).</summary>
-    public Money Profit => Total - TotalCost;
+    // Puede ser negativa (ítem vendido a pérdida): decimal, no Money.
+    public decimal Profit => Total.Amount - TotalCost.Amount;
 }

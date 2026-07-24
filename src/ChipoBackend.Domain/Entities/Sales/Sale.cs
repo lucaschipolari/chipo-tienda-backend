@@ -74,7 +74,8 @@ public class Sale : AuditableEntity
         _items.Aggregate(Money.Zero(Subtotal.Currency), (acc, i) => acc + i.TotalCost);
 
     /// <summary>Ganancia real de la venta (total cobrado − costo total).</summary>
-    public Money Profit => Total - TotalCost;
+    // Puede ser negativa (venta a pérdida): se calcula en decimal, no en Money.
+    public decimal Profit => Total.Amount - TotalCost.Amount;
 }
 
 public enum SaleChannel { InStore, Phone, WhatsApp, Other }

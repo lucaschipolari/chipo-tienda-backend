@@ -36,7 +36,7 @@ public class GetSaleByIdQueryHandler(
             DiscountAmount: sale.DiscountAmount.Amount,
             Total: sale.Total.Amount,
             TotalCost: sale.TotalCost.Amount,
-            Profit: sale.Profit.Amount,
+            Profit: sale.Profit,
             Currency: sale.Total.Currency,
             PaymentMethod: sale.PaymentMethod,
             Notes: sale.Notes,
@@ -52,7 +52,7 @@ public class GetSaleByIdQueryHandler(
                 Total: i.Total.Amount,
                 UnitCost: i.UnitCost.Amount,
                 TotalCost: i.TotalCost.Amount,
-                Profit: i.Profit.Amount,
+                Profit: i.Profit,
                 Currency: i.UnitPrice.Currency
             )).ToList(),
             CreatedAt: sale.CreatedAt
