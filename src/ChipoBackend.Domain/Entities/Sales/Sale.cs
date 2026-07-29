@@ -64,7 +64,11 @@ public class Sale : AuditableEntity
     private void RecalculateTotals()
     {
         var currency = Subtotal.Currency;
-        Subtotal = _items.Aggregate(Money.Zero(currency), (acc, i) => acc + i.Total);
+        // Subtotal BRUTO (antes de descuentos) = precio × cantidad de cada línea.
+        Subtotal = _items.Aggregate(Money.Zero(currency), (acc, i) => acc + i.UnitPrice * i.Quantity);
+        // Descuento total = suma de los descuentos por línea (así queda visible).
+        DiscountAmount = _items.Aggregate(Money.Zero(currency), (acc, i) => acc + i.Discount);
+        // Total cobrado = subtotal − descuento.
         Total = Subtotal - DiscountAmount;
         UpdatedAt = DateTime.UtcNow;
     }
