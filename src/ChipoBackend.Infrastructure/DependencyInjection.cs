@@ -63,6 +63,7 @@ public static class DependencyInjection
         services.AddScoped<IStockMovementRepository, StockMovementRepository>();
         services.AddScoped<IAppSettingRepository, AppSettingRepository>();
         services.AddScoped<IAnalyticsEventRepository, AnalyticsEventRepository>();
+        services.AddScoped<IComboRepository, ComboRepository>();
         services.AddScoped<ISaleRepository, SaleRepository>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<IExpenseCategoryRepository, ExpenseCategoryRepository>();

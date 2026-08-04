@@ -80,6 +80,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     // Analítica (eventos anónimos de interacción)
     public DbSet<ChipoBackend.Domain.Entities.Analytics.AnalyticsEvent> AnalyticsEvents => Set<ChipoBackend.Domain.Entities.Analytics.AnalyticsEvent>();
 
+    // Combos (packs de productos a precio especial)
+    public DbSet<ChipoBackend.Domain.Entities.Combos.Combo> Combos => Set<ChipoBackend.Domain.Entities.Combos.Combo>();
+    public DbSet<ChipoBackend.Domain.Entities.Combos.ComboItem> ComboItems => Set<ChipoBackend.Domain.Entities.Combos.ComboItem>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
