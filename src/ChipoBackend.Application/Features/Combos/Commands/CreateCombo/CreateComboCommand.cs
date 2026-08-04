@@ -1,4 +1,5 @@
 using ChipoBackend.Application.Features.Combos.DTOs;
+using ChipoBackend.Application.Features.Products;
 using ChipoBackend.Domain.Entities.Combos;
 using ChipoBackend.Domain.Interfaces;
 using ChipoBackend.Domain.Interfaces.Repositories;
@@ -45,8 +46,9 @@ public class CreateComboCommandHandler(
         if (await comboRepository.SlugExistsAsync(slug, null, ct))
             slug = $"{slug}-{Guid.NewGuid().ToString("n")[..6]}";
 
+        var imageUrl = string.IsNullOrWhiteSpace(request.ImageUrl) ? null : ImageUrlHelper.Normalize(request.ImageUrl);
         var combo = Combo.Create(request.Name, slug, Money.Of(request.Price, request.Currency),
-            request.Description, request.ImageUrl);
+            request.Description, imageUrl);
         foreach (var it in request.Items)
             combo.AddItem(it.ProductId, it.VariantId, it.Quantity);
 

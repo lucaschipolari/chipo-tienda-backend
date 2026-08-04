@@ -1,5 +1,6 @@
 using ChipoBackend.Application.Common.Exceptions;
 using ChipoBackend.Application.Features.Combos.DTOs;
+using ChipoBackend.Application.Features.Products;
 using ChipoBackend.Domain.Entities.Combos;
 using ChipoBackend.Domain.Interfaces;
 using ChipoBackend.Domain.Interfaces.Repositories;
@@ -44,7 +45,8 @@ public class UpdateComboCommandHandler(
         if (await comboRepository.SlugExistsAsync(slug, combo.Id, ct))
             slug = $"{slug}-{Guid.NewGuid().ToString("n")[..6]}";
 
-        combo.Update(request.Name, slug, Money.Of(request.Price, request.Currency), request.Description, request.ImageUrl);
+        var imageUrl = string.IsNullOrWhiteSpace(request.ImageUrl) ? null : ImageUrlHelper.Normalize(request.ImageUrl);
+        combo.Update(request.Name, slug, Money.Of(request.Price, request.Currency), request.Description, imageUrl);
         combo.ClearItems();
         foreach (var it in request.Items)
             combo.AddItem(it.ProductId, it.VariantId, it.Quantity);
