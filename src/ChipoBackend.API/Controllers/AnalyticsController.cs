@@ -1,5 +1,6 @@
 using ChipoBackend.Application.Features.Analytics.Commands.RecordEvent;
 using ChipoBackend.Application.Features.Analytics.Queries.GetDashboard;
+using ChipoBackend.Application.Features.Analytics.Queries.GetPopular;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,6 +16,15 @@ public class AnalyticsController : BaseApiController
     {
         await Mediator.Send(command, ct);
         return NoContent();
+    }
+
+    /// <summary>Productos más vistos (para ordenar la tienda). Público.</summary>
+    [HttpGet("popular")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Popular([FromQuery] int days = 30, CancellationToken ct = default)
+    {
+        var result = await Mediator.Send(new GetPopularProductsQuery(days), ct);
+        return Ok(result);
     }
 
     /// <summary>Dashboard de analítica (rankings + resumen). Solo administración.</summary>
