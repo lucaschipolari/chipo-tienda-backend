@@ -10,7 +10,13 @@ public record GetSalesQuery(
     int PageSize = 20,
     Guid? CustomerId = null,
     DateTime? From = null,
-    DateTime? To = null
+    DateTime? To = null,
+    string? Search = null,
+    Guid? ProductId = null,
+    string? PaymentMethod = null,
+    string? Channel = null,
+    decimal? MinTotal = null,
+    decimal? MaxTotal = null
 ) : IRequest<PagedResult<SaleListItemDto>>;
 
 public class GetSalesQueryHandler(
@@ -21,7 +27,9 @@ public class GetSalesQueryHandler(
     public async Task<PagedResult<SaleListItemDto>> Handle(GetSalesQuery request, CancellationToken ct)
     {
         var (sales, total) = await saleRepository.GetPagedAsync(
-            request.Page, request.PageSize, request.CustomerId, request.From, request.To, ct);
+            request.Page, request.PageSize, request.CustomerId, request.From, request.To,
+            request.Search, request.ProductId, request.PaymentMethod, request.Channel,
+            request.MinTotal, request.MaxTotal, ct);
 
         // Cache de clientes
         var customerIds = sales.Where(s => s.CustomerId.HasValue).Select(s => s.CustomerId!.Value).Distinct();

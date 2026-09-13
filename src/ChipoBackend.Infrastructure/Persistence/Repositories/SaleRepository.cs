@@ -16,13 +16,33 @@ public class SaleRepository(AppDbContext context) : BaseRepository<Sale>(context
 
     public async Task<(IReadOnlyList<Sale> Items, int TotalCount)> GetPagedAsync(
         int page, int pageSize, Guid? customerId = null,
-        DateTime? from = null, DateTime? to = null, CancellationToken ct = default)
+        DateTime? from = null, DateTime? to = null,
+        string? search = null, Guid? productId = null, string? paymentMethod = null,
+        string? channel = null, decimal? minTotal = null, decimal? maxTotal = null,
+        CancellationToken ct = default)
     {
         var query = DbSet.Include(s => s.Items).AsQueryable();
 
         if (customerId.HasValue) query = query.Where(s => s.CustomerId == customerId);
         if (from.HasValue) query = query.Where(s => s.CreatedAt >= from);
         if (to.HasValue) query = query.Where(s => s.CreatedAt <= to);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim().ToLower();
+            query = query.Where(s =>
+                s.SaleNumber.ToLower().Contains(term) ||
+                (s.CustomerName != null && s.CustomerName.ToLower().Contains(term)) ||
+                s.Items.Any(i => i.ProductName.ToLower().Contains(term)));
+        }
+        if (productId.HasValue)
+            query = query.Where(s => s.Items.Any(i => i.ProductId == productId.Value));
+        if (!string.IsNullOrWhiteSpace(paymentMethod))
+            query = query.Where(s => s.PaymentMethod == paymentMethod);
+        if (!string.IsNullOrWhiteSpace(channel) && Enum.TryParse<SaleChannel>(channel, true, out var ch))
+            query = query.Where(s => s.Channel == ch);
+        if (minTotal.HasValue) query = query.Where(s => s.Total.Amount >= minTotal.Value);
+        if (maxTotal.HasValue) query = query.Where(s => s.Total.Amount <= maxTotal.Value);
 
         var total = await query.CountAsync(ct);
         var items = await query.OrderByDescending(s => s.CreatedAt)

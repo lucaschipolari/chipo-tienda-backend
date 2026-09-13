@@ -21,9 +21,16 @@ public class SalesController : BaseApiController
         [FromQuery] Guid? customerId = null,
         [FromQuery] DateTime? from = null,
         [FromQuery] DateTime? to = null,
+        [FromQuery] string? search = null,
+        [FromQuery] Guid? productId = null,
+        [FromQuery] string? paymentMethod = null,
+        [FromQuery] string? channel = null,
+        [FromQuery] decimal? minTotal = null,
+        [FromQuery] decimal? maxTotal = null,
         CancellationToken ct = default)
     {
-        var result = await Mediator.Send(new GetSalesQuery(page, pageSize, customerId, from, to), ct);
+        var result = await Mediator.Send(new GetSalesQuery(
+            page, pageSize, customerId, from, to, search, productId, paymentMethod, channel, minTotal, maxTotal), ct);
         return Ok(result);
     }
 

@@ -11,6 +11,12 @@ public interface ISaleRepository : IRepository<Sale>
         Guid? customerId = null,
         DateTime? from = null,
         DateTime? to = null,
+        string? search = null,
+        Guid? productId = null,
+        string? paymentMethod = null,
+        string? channel = null,
+        decimal? minTotal = null,
+        decimal? maxTotal = null,
         CancellationToken ct = default);
     Task<string> GenerateSaleNumberAsync(CancellationToken ct = default);
     Task<SalesSummaryData> GetSummaryAsync(DateTime from, DateTime to, CancellationToken ct = default);
