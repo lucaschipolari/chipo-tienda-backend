@@ -40,6 +40,8 @@ public class GetSaleByIdQueryHandler(
             Currency: sale.Total.Currency,
             PaymentMethod: sale.PaymentMethod,
             Notes: sale.Notes,
+            ReferralSource: sale.ReferralSource,
+            DeliveryMethod: sale.DeliveryMethod,
             Items: sale.Items.Select(i => new SaleItemDto(
                 Id: i.Id,
                 ProductId: i.ProductId,

@@ -24,7 +24,9 @@ public record CreateSaleCommand(
     // Importación histórica: no valida ni descuenta stock, y usa la fecha provista.
     bool IsHistorical = false,
     DateTime? SaleDate = null,
-    string? CustomerName = null
+    string? CustomerName = null,
+    string? ReferralSource = null,
+    string? DeliveryMethod = null
 ) : IRequest<Guid>;
 
 public class CreateSaleCommandValidator : AbstractValidator<CreateSaleCommand>
@@ -36,6 +38,11 @@ public class CreateSaleCommandValidator : AbstractValidator<CreateSaleCommand>
     {
         RuleFor(x => x.Items).NotEmpty().WithMessage("La venta debe tener al menos un ítem.");
         RuleFor(x => x.PaymentMethod).NotEmpty().WithMessage("El método de pago es requerido.");
+        // Regla: con envío no se puede pagar en efectivo.
+        RuleFor(x => x)
+            .Must(cmd => !(string.Equals(cmd.DeliveryMethod, "Delivery", StringComparison.OrdinalIgnoreCase)
+                        && string.Equals(cmd.PaymentMethod, "Cash", StringComparison.OrdinalIgnoreCase)))
+            .WithMessage("Si la entrega es por envío, el pago no puede ser en efectivo.");
         RuleFor(x => x.Channel)
             .Must(c => ValidChannels.Contains(c, StringComparer.OrdinalIgnoreCase))
             .WithMessage($"Canal inválido. Opciones: {string.Join(", ", ValidChannels)}");
@@ -114,7 +121,7 @@ public class CreateSaleCommandHandler(
         var saleDate = request.SaleDate.HasValue
             ? DateTime.SpecifyKind(request.SaleDate.Value, DateTimeKind.Utc)
             : (DateTime?)null;
-        var sale = Sale.Create(saleNumber, userId, request.PaymentMethod, channel, request.Currency, request.CustomerId, request.Notes, createdAt: saleDate, customerName: request.CustomerName);
+        var sale = Sale.Create(saleNumber, userId, request.PaymentMethod, channel, request.Currency, request.CustomerId, request.Notes, createdAt: saleDate, customerName: request.CustomerName, referralSource: request.ReferralSource, deliveryMethod: request.DeliveryMethod);
         unitOfWork.Add(sale);
 
         // Agregar ítems y descontar stock

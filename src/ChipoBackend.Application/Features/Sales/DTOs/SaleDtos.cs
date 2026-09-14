@@ -32,6 +32,8 @@ public record SaleDto(
     string Currency,
     string PaymentMethod,
     string? Notes,
+    string? ReferralSource,
+    string? DeliveryMethod,
     List<SaleItemDto> Items,
     DateTime CreatedAt
 );

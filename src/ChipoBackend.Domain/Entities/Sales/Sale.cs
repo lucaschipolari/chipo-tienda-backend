@@ -15,6 +15,10 @@ public class Sale : AuditableEntity
     public Money Total { get; private set; } = null!;
     public string PaymentMethod { get; private set; } = null!;
     public string? Notes { get; private set; }
+    /// <summary>Cómo nos conoció el cliente (Instagram, recomendación, etc.).</summary>
+    public string? ReferralSource { get; private set; }
+    /// <summary>Entrega: "Pickup" (retiro) o "Delivery" (envío).</summary>
+    public string? DeliveryMethod { get; private set; }
     /// <summary>Pedido del que se generó esta venta (si vino de la tienda web).</summary>
     public Guid? OrderId { get; private set; }
 
@@ -35,7 +39,7 @@ public class Sale : AuditableEntity
 
     private Sale() { }
 
-    public static Sale Create(string saleNumber, Guid soldByUserId, string paymentMethod, SaleChannel channel, string currency = "ARS", Guid? customerId = null, string? notes = null, DateTime? createdAt = null, string? customerName = null)
+    public static Sale Create(string saleNumber, Guid soldByUserId, string paymentMethod, SaleChannel channel, string currency = "ARS", Guid? customerId = null, string? notes = null, DateTime? createdAt = null, string? customerName = null, string? referralSource = null, string? deliveryMethod = null)
     {
         var now = createdAt ?? DateTime.UtcNow;
         return new Sale
@@ -47,6 +51,8 @@ public class Sale : AuditableEntity
             Channel = channel,
             PaymentMethod = paymentMethod,
             Notes = notes,
+            ReferralSource = referralSource,
+            DeliveryMethod = deliveryMethod,
             Subtotal = Money.Zero(currency),
             DiscountAmount = Money.Zero(currency),
             Total = Money.Zero(currency),
