@@ -29,6 +29,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<ProductVariant> ProductVariants => Set<ProductVariant>();
     public DbSet<ProductImage> ProductImages => Set<ProductImage>();
     public DbSet<ProductRelation> ProductRelations => Set<ProductRelation>();
+    public DbSet<ProductCostHistory> ProductCostHistory => Set<ProductCostHistory>();
 
     // Customers
     public DbSet<Customer> Customers => Set<Customer>();

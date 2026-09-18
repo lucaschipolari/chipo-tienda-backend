@@ -1,5 +1,6 @@
 using ChipoBackend.Application.Common.Exceptions;
 using ChipoBackend.Application.Common.Interfaces;
+using ChipoBackend.Domain.Entities.Catalog;
 using ChipoBackend.Domain.Entities.Inventory;
 using ChipoBackend.Domain.Interfaces;
 using ChipoBackend.Domain.Interfaces.Repositories;
@@ -38,6 +39,12 @@ public class ReceivePurchaseOrderCommandHandler(
 
             var stockBefore = variant.StockQuantity;
             variant.IncrementStock(quantityReceived);
+
+            // Historial de costos: registrar el costo de esta compra (append-only, no pisa el precio de venta).
+            var costRecord = ProductCostHistory.Create(
+                item.ProductId, item.VariantId, item.UnitCost, CostSource.PurchaseReceipt,
+                purchaseOrderId: order.Id, createdByUserId: currentUser.UserId);
+            unitOfWork.Add(costRecord);
 
             var movement = StockMovement.Create(
                 item.ProductId, item.VariantId, MovementType.PurchaseReceipt,

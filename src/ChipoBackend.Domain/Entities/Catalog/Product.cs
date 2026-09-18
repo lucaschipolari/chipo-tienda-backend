@@ -107,6 +107,19 @@ public class Product : AuditableEntity
 
     public bool IsBelowReorderMl => IsDecant && ReorderMl > 0 && StockMl <= ReorderMl;
 
+    // ── Rentabilidad ─────────────────────────────────────────────────────────
+    /// <summary>Margen objetivo específico de este producto (0–100). Null = usa el margen general.</summary>
+    public decimal? TargetMarginPct { get; private set; }
+
+    /// <summary>Define (o limpia con null) el margen objetivo específico del producto.</summary>
+    public void SetTargetMargin(decimal? targetMarginPct)
+    {
+        if (targetMarginPct is < 0 or >= 100)
+            throw new DomainException("El margen objetivo debe estar entre 0 y 99,99%.");
+        TargetMarginPct = targetMarginPct;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     /// <summary>Setea el perfil olfativo. Listas nulas se tratan como vacías.</summary>
     public void SetOlfactoryProfile(
         List<string>? topNotes, List<string>? heartNotes, List<string>? baseNotes,

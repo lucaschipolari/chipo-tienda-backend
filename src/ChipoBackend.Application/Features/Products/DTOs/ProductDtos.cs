@@ -59,6 +59,7 @@ public record ProductDto(
     int? BottleMl,
     int ReorderMl,
     decimal? CostPerMl,
+    decimal? TargetMarginPct,
     DateTime CreatedAt,
     DateTime UpdatedAt);
 

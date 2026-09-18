@@ -17,6 +17,9 @@ public static class DependencyInjection
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
+        // Servicios de cálculo del módulo de rentabilidad
+        services.AddScoped<Features.Profitability.ProfitabilityRowBuilder>();
+
         return services;
     }
 }

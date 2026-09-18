@@ -1,4 +1,6 @@
 using ChipoBackend.Application.Common.Exceptions;
+using ChipoBackend.Application.Common.Interfaces;
+using ChipoBackend.Domain.Entities.Catalog;
 using ChipoBackend.Domain.Interfaces;
 using ChipoBackend.Domain.Interfaces.Repositories;
 using ChipoBackend.Domain.ValueObjects;
@@ -34,6 +36,7 @@ public class UpdateProductVariantCommandValidator : AbstractValidator<UpdateProd
 
 public class UpdateProductVariantCommandHandler(
     IProductRepository productRepository,
+    ICurrentUserService currentUser,
     IUnitOfWork unitOfWork
 ) : IRequestHandler<UpdateProductVariantCommand>
 {
@@ -51,8 +54,18 @@ public class UpdateProductVariantCommandHandler(
         var compareAt = request.CompareAtPrice.HasValue ? Money.Of(request.CompareAtPrice.Value, request.Currency) : null;
         variant.UpdateCompareAtPrice(compareAt);
 
+        var previousCost = variant.Cost?.Amount;
         var cost = request.Cost.HasValue ? Money.Of(request.Cost.Value, request.Currency) : null;
         variant.UpdateCost(cost);
+
+        // Historial de costos: si el costo manual cambió a un valor positivo, dejar constancia (append-only).
+        if (cost is { Amount: > 0 } && cost.Amount != previousCost)
+        {
+            var costRecord = ProductCostHistory.Create(
+                product.Id, variant.Id, cost, CostSource.ManualEdit,
+                createdByUserId: currentUser.UserId);
+            unitOfWork.Add(costRecord);
+        }
 
         if (request.Attributes is not null)
             variant.UpdateAttributes(request.Attributes);

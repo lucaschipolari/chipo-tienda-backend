@@ -17,6 +17,10 @@ public class ProductRepository(AppDbContext context) : BaseRepository<Product>(c
         await DbSet.Include(p => p.Variants).Include(p => p.Images).Include(p => p.Category)
             .FirstOrDefaultAsync(p => p.Id == id, ct);
 
+    public async Task<IReadOnlyList<Product>> GetAllWithVariantsAndCategoryAsync(CancellationToken ct = default) =>
+        await DbSet.Include(p => p.Variants).Include(p => p.Category)
+            .OrderBy(p => p.Name).ToListAsync(ct);
+
     public async Task<(IReadOnlyList<Product> Items, int TotalCount)> GetPagedAsync(
         int page, int pageSize, Guid? categoryId = null, string? search = null,
         ProductStatus? status = null, CancellationToken ct = default)

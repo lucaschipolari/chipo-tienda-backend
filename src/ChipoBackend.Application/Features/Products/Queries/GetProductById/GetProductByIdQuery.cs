@@ -75,6 +75,7 @@ public class GetProductByIdQueryHandler(IProductRepository productRepository)
             BottleMl: product.BottleMl,
             ReorderMl: product.ReorderMl,
             CostPerMl: product.CostPerMl,
+            TargetMarginPct: product.TargetMarginPct,
             CreatedAt: product.CreatedAt,
             UpdatedAt: product.UpdatedAt
         );
