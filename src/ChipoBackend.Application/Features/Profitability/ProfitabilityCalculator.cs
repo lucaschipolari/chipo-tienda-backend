@@ -20,6 +20,7 @@ public record ProfitabilityResult(
     decimal? MarginPct,
     decimal TargetMarginPct,
     bool TargetIsCustom,
+    string TargetSource,   // "product" | "category" | "general"
     decimal? SuggestedPrice,
     decimal? PriceDifference,
     string Status
@@ -83,10 +84,14 @@ public static class ProfitabilityCalculator
     /// <summary>Análisis completo de una variante/producto.</summary>
     public static ProfitabilityResult Analyze(
         decimal? salePrice, decimal? lastCost, decimal? previousCost,
-        decimal? productTargetMargin, ProfitabilitySettingsDto settings)
+        decimal? productTargetMargin, decimal? categoryTargetMargin, ProfitabilitySettingsDto settings)
     {
-        var target = productTargetMargin ?? settings.TargetMarginPct;
+        // Prioridad: margen del producto → margen de la categoría → margen general.
+        var target = productTargetMargin ?? categoryTargetMargin ?? settings.TargetMarginPct;
         var isCustom = productTargetMargin.HasValue;
+        var source = productTargetMargin.HasValue ? "product"
+                   : categoryTargetMargin.HasValue ? "category"
+                   : "general";
 
         var margin = Margin(salePrice, lastCost);
         var profit = (salePrice.HasValue && lastCost.HasValue) ? salePrice.Value - lastCost.Value : (decimal?)null;
@@ -105,6 +110,7 @@ public static class ProfitabilityCalculator
             MarginPct: margin,
             TargetMarginPct: target,
             TargetIsCustom: isCustom,
+            TargetSource: source,
             SuggestedPrice: suggested,
             PriceDifference: diff,
             Status: status

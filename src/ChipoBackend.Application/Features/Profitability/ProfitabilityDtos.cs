@@ -20,6 +20,7 @@ public record ProfitabilityRowDto(
     decimal? MarginPct,
     decimal TargetMarginPct,
     bool TargetIsCustom,
+    string TargetSource,
     decimal? SuggestedPrice,
     decimal? PriceDifference,
     string Status

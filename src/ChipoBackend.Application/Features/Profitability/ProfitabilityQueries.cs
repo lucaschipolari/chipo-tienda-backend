@@ -16,6 +16,7 @@ public class ProfitabilityRowBuilder(
     {
         var settings = ProfitabilitySettings.Parse((await appSettings.GetAsync(ProfitabilitySettings.Key, ct))?.Value);
         var vialCosts = VialCostSettings.Parse((await appSettings.GetAsync(VialCostSettings.Key, ct))?.Value);
+        var categoryMargins = CategoryMargins.Parse((await appSettings.GetAsync(CategoryMargins.Key, ct))?.Value);
 
         var products = await productRepository.GetAllWithVariantsAndCategoryAsync(ct);
         var allHistory = await costHistoryRepository.GetAllOrderedAsync(ct);
@@ -31,8 +32,9 @@ public class ProfitabilityRowBuilder(
                 var vHistory = historyByVariant.TryGetValue(variant.Id, out var h) ? h : [];
                 var (last, prev) = ProfitabilityCostResolver.Resolve(product, variant, vHistory, vialCosts);
                 var price = ProfitabilityCostResolver.SalePrice(product, variant);
+                var catMargin = categoryMargins.TryGetValue(product.CategoryId, out var cm) ? cm : (decimal?)null;
 
-                var r = ProfitabilityCalculator.Analyze(price, last, prev, product.TargetMarginPct, settings);
+                var r = ProfitabilityCalculator.Analyze(price, last, prev, product.TargetMarginPct, catMargin, settings);
 
                 rows.Add(new ProfitabilityRowDto(
                     ProductId: product.Id,
@@ -53,6 +55,7 @@ public class ProfitabilityRowBuilder(
                     MarginPct: r.MarginPct,
                     TargetMarginPct: r.TargetMarginPct,
                     TargetIsCustom: r.TargetIsCustom,
+                    TargetSource: r.TargetSource,
                     SuggestedPrice: r.SuggestedPrice,
                     PriceDifference: r.PriceDifference,
                     Status: r.Status
@@ -167,6 +170,7 @@ public class GetProductProfitabilityQueryHandler(
 
         var settings = ProfitabilitySettings.Parse((await appSettings.GetAsync(ProfitabilitySettings.Key, ct))?.Value);
         var vialCosts = VialCostSettings.Parse((await appSettings.GetAsync(VialCostSettings.Key, ct))?.Value);
+        var categoryMargins = CategoryMargins.Parse((await appSettings.GetAsync(CategoryMargins.Key, ct))?.Value);
 
         // Variante principal para el análisis (la de menor DisplayOrder / primera activa).
         var variant = product.Variants.OrderBy(v => v.DisplayOrder).FirstOrDefault(v => v.IsActive)
@@ -176,7 +180,8 @@ public class GetProductProfitabilityQueryHandler(
         var vHistory = await costHistoryRepository.GetByVariantAsync(variant.Id, ct);
         var (last, prev) = ProfitabilityCostResolver.Resolve(product, variant, vHistory, vialCosts);
         var price = ProfitabilityCostResolver.SalePrice(product, variant);
-        var r = ProfitabilityCalculator.Analyze(price, last, prev, product.TargetMarginPct, settings);
+        var catMargin = categoryMargins.TryGetValue(product.CategoryId, out var cm) ? cm : (decimal?)null;
+        var r = ProfitabilityCalculator.Analyze(price, last, prev, product.TargetMarginPct, catMargin, settings);
 
         var analysis = new ProfitabilityRowDto(
             ProductId: product.Id, VariantId: variant.Id, ProductName: product.Name,
@@ -186,6 +191,7 @@ public class GetProductProfitabilityQueryHandler(
             SalePrice: r.SalePrice, LastCost: r.LastCost, PreviousCost: r.PreviousCost,
             CostChangeAbs: r.CostChangeAbs, CostChangePct: r.CostChangePct, Profit: r.Profit,
             MarginPct: r.MarginPct, TargetMarginPct: r.TargetMarginPct, TargetIsCustom: r.TargetIsCustom,
+            TargetSource: r.TargetSource,
             SuggestedPrice: r.SuggestedPrice, PriceDifference: r.PriceDifference, Status: r.Status);
 
         // Historial cronológico (viejo → nuevo) con variación contra el registro anterior.

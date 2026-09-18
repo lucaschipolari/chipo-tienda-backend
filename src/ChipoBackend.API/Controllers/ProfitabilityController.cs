@@ -56,6 +56,20 @@ public class ProfitabilityController : BaseApiController
         await Mediator.Send(new SetProfitabilitySettingsCommand(settings), ct);
         return NoContent();
     }
+
+    /// <summary>Márgenes objetivo por categoría (prioridad: producto → categoría → general).</summary>
+    [HttpGet("category-margins")]
+    public async Task<IActionResult> GetCategoryMargins(CancellationToken ct)
+        => Ok(await Mediator.Send(new GetCategoryMarginsQuery(), ct));
+
+    [HttpPut("category-margins")]
+    public async Task<IActionResult> SetCategoryMargins([FromBody] SetCategoryMarginsRequest request, CancellationToken ct)
+    {
+        await Mediator.Send(new SetCategoryMarginsCommand(request.Items), ct);
+        return NoContent();
+    }
 }
+
+public record SetCategoryMarginsRequest(List<CategoryMarginDto> Items);
 
 public record SetTargetMarginRequest(decimal? TargetMarginPct);
