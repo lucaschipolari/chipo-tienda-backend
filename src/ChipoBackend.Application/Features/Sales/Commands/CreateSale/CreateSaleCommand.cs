@@ -117,6 +117,9 @@ public class CreateSaleCommandHandler(
 
         // Costo de frasquitos por tamaño (global) — se suma al costo de cada decant
         var vialCosts = VialCostSettings.Parse((await appSettings.GetAsync(VialCostSettings.Key, ct))?.Value);
+        // Frasco físico (producto de stock) por tamaño — se descuenta 1 por decant vendido
+        var vialProducts = DecantVialProducts.Parse((await appSettings.GetAsync(DecantVialProducts.Key, ct))?.Value);
+        var vialCache = new Dictionary<Guid, Product>();
 
         var saleDate = request.SaleDate.HasValue
             ? DateTime.SpecifyKind(request.SaleDate.Value, DateTimeKind.Utc)
@@ -156,6 +159,9 @@ public class CreateSaleCommandHandler(
                     referenceType: "Sale", reason: $"Venta {saleNumber} ({mlNeeded} ml)",
                     createdByUserId: userId);
                 unitOfWork.Add(movement);
+
+                // Descontar automáticamente el frasco vacío del tamaño correspondiente (si está configurado)
+                await DecrementVialAsync(mlPerUnit, req.Quantity, saleNumber, userId, vialProducts, vialCache, ct);
             }
             else
             {
@@ -184,6 +190,35 @@ public class CreateSaleCommandHandler(
             if (m.Success) return int.Parse(m.Groups[1].Value);
         }
         return 0;
+    }
+
+    // Descuenta 1 frasco vacío por unidad de decant vendida, según el mapeo ml → producto frasco.
+    // No bloquea la venta si el frasco no está configurado o no tiene variante activa.
+    private async Task DecrementVialAsync(
+        int ml, int quantity, string saleNumber, Guid userId,
+        Dictionary<int, Guid> vialProducts, Dictionary<Guid, Product> cache, CancellationToken ct)
+    {
+        if (quantity <= 0) return;
+        if (!vialProducts.TryGetValue(ml, out var vialProductId)) return;
+
+        if (!cache.TryGetValue(vialProductId, out var vialProduct))
+        {
+            var loaded = await productRepository.GetWithVariantsAsync(vialProductId, ct);
+            if (loaded is null) return;
+            vialProduct = loaded;
+            cache[vialProductId] = loaded;
+        }
+
+        var vialVariant = vialProduct.Variants.FirstOrDefault(v => v.IsActive) ?? vialProduct.Variants.FirstOrDefault();
+        if (vialVariant is null) return;
+
+        var before = vialVariant.StockQuantity;
+        vialVariant.DecrementStock(quantity);
+        unitOfWork.Add(StockMovement.Create(
+            vialProduct.Id, vialVariant.Id, MovementType.SaleOut,
+            quantity, before, vialVariant.StockQuantity,
+            referenceType: "Sale", reason: $"Frasco {ml}ml · Venta {saleNumber}",
+            createdByUserId: userId));
     }
 
     // ── Importación histórica ───────────────────────────────────────────────────

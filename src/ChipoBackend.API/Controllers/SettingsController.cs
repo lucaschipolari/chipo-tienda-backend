@@ -21,6 +21,21 @@ public class SettingsController : BaseApiController
         await Mediator.Send(new SetVialCostsCommand(request.Items), ct);
         return NoContent();
     }
+
+    /// <summary>Frasco físico (producto de stock) por tamaño de decant — se descuenta al vender.</summary>
+    [HttpGet("vial-products")]
+    [Authorize(Roles = "SuperAdmin,Admin,Supervisor")]
+    public async Task<IActionResult> GetVialProducts(CancellationToken ct)
+        => Ok(await Mediator.Send(new GetVialProductsQuery(), ct));
+
+    [HttpPut("vial-products")]
+    [Authorize(Roles = "SuperAdmin,Admin,Supervisor")]
+    public async Task<IActionResult> SetVialProducts([FromBody] SetVialProductsRequest request, CancellationToken ct)
+    {
+        await Mediator.Send(new SetVialProductsCommand(request.Items), ct);
+        return NoContent();
+    }
 }
 
 public record SetVialCostsRequest(List<VialCostDto> Items);
+public record SetVialProductsRequest(List<VialProductDto> Items);
