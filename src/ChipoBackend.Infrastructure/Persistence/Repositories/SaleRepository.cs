@@ -74,7 +74,11 @@ public class SaleRepository(AppDbContext context) : BaseRepository<Sale>(context
         var byDay = sales
             .GroupBy(s => s.CreatedAt.Date)
             .OrderBy(g => g.Key)
-            .Select(g => (Date: g.Key, Revenue: g.Sum(s => s.Total.Amount), Count: g.Count()))
+            .Select(g => (
+                Date: g.Key,
+                Revenue: g.Sum(s => s.Total.Amount),
+                Count: g.Count(),
+                Profit: g.Sum(s => s.Total.Amount - s.TotalCost.Amount)))
             .ToList();
 
         // Top productos

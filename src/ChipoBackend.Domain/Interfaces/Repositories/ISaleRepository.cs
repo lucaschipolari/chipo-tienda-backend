@@ -28,7 +28,7 @@ public record SalesSummaryData(
     decimal TotalCost,
     decimal TotalProfit,
     decimal AverageTicket,
-    List<(DateTime Date, decimal Revenue, int Count)> ByDay,
+    List<(DateTime Date, decimal Revenue, int Count, decimal Profit)> ByDay,
     List<(Guid ProductId, string ProductName, int Quantity, decimal Revenue)> TopProducts,
     List<(Guid CustomerId, string CustomerName, int Orders, decimal Total)> TopCustomers
 );

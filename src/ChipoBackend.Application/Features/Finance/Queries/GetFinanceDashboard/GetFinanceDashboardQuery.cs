@@ -102,7 +102,8 @@ public class GetFinanceDashboardQueryHandler(
                     Date: day.ToString("yyyy-MM-dd"),
                     Revenue: d.Revenue,
                     Costs: dayCosts,
-                    Expenses: dayExpenses);
+                    Expenses: dayExpenses,
+                    Profit: d.Profit);
             })
             .ToList();
 

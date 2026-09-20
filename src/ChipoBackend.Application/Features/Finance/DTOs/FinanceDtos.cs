@@ -27,7 +27,8 @@ public record RevenueByDayDto(
     string Date,
     decimal Revenue,
     decimal Costs,
-    decimal Expenses);
+    decimal Expenses,
+    decimal Profit);   // ganancia de las ventas del día (ingresos − costo de lo vendido)
 
 /// <summary>Top-product DTO used by GetFinanceDashboardQuery (finance-focused fields).</summary>
 public record FinanceTopProductDto(
