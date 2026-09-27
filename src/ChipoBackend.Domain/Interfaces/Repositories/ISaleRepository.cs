@@ -20,6 +20,8 @@ public interface ISaleRepository : IRepository<Sale>
         CancellationToken ct = default);
     Task<string> GenerateSaleNumberAsync(CancellationToken ct = default);
     Task<SalesSummaryData> GetSummaryAsync(DateTime from, DateTime to, CancellationToken ct = default);
+    /// <summary>Ventas con sus ítems en un rango de fechas (para análisis de decants, etc.).</summary>
+    Task<IReadOnlyList<Sale>> GetWithItemsByDateRangeAsync(DateTime from, DateTime to, CancellationToken ct = default);
 }
 
 public record SalesSummaryData(

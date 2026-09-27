@@ -4,6 +4,7 @@ using ChipoBackend.Application.Features.Sales.Commands.UpdateSale;
 using ChipoBackend.Application.Features.Sales.Queries.GetSaleById;
 using ChipoBackend.Application.Features.Sales.Queries.GetSales;
 using ChipoBackend.Application.Features.Sales.Queries.GetSalesReport;
+using ChipoBackend.Application.Features.Sales.Queries.GetDecantSales;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -41,6 +42,12 @@ public class SalesController : BaseApiController
         var result = await Mediator.Send(new GetSaleByIdQuery(id), ct);
         return Ok(result);
     }
+
+    /// <summary>Decants vendidos por día (últimos 30), semana (últimas 12) o mes (últimos 12).</summary>
+    [HttpGet("decants-sold")]
+    [Authorize(Roles = "SuperAdmin,Admin,Supervisor")]
+    public async Task<IActionResult> DecantsSold([FromQuery] string granularity = "day", CancellationToken ct = default)
+        => Ok(await Mediator.Send(new GetDecantSalesQuery(granularity), ct));
 
     /// <summary>Registrar una venta directa (descuenta stock inmediatamente)</summary>
     [HttpPost]

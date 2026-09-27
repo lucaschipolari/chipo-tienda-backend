@@ -14,6 +14,11 @@ public class SaleRepository(AppDbContext context) : BaseRepository<Sale>(context
         await DbSet.Include(s => s.Items)
             .FirstOrDefaultAsync(s => s.OrderId == orderId, ct);
 
+    public async Task<IReadOnlyList<Sale>> GetWithItemsByDateRangeAsync(DateTime from, DateTime to, CancellationToken ct = default) =>
+        await DbSet.Include(s => s.Items)
+            .Where(s => s.CreatedAt >= from && s.CreatedAt <= to)
+            .ToListAsync(ct);
+
     public async Task<(IReadOnlyList<Sale> Items, int TotalCount)> GetPagedAsync(
         int page, int pageSize, Guid? customerId = null,
         DateTime? from = null, DateTime? to = null,
