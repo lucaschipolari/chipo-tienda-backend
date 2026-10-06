@@ -20,7 +20,8 @@ public record GetFinanceDashboardQuery(
 public class GetFinanceDashboardQueryHandler(
     ISaleRepository saleRepository,
     IExpenseRepository expenseRepository,
-    IPurchaseOrderRepository purchaseOrderRepository
+    IPurchaseOrderRepository purchaseOrderRepository,
+    IProductRepository productRepository
 ) : IRequestHandler<GetFinanceDashboardQuery, FinanceDashboardDto>
 {
     private const string Currency = "ARS";
@@ -141,14 +142,31 @@ public class GetFinanceDashboardQueryHandler(
             Currency: Currency);
 
         // ── Top products ──────────────────────────────────────────────────────
+        // Costo unitario actual por producto (último costo conocido). Para decants
+        // no se puede estimar por producto agregado → queda sin margen.
+        var allProducts = await productRepository.GetAllWithVariantsAndCategoryAsync(ct);
+        var unitCostByProduct = new Dictionary<Guid, decimal?>();
+        foreach (var p in allProducts)
+        {
+            if (p.IsDecant) { unitCostByProduct[p.Id] = null; continue; }
+            var c = p.Variants.Select(v => v.Cost?.Amount).FirstOrDefault(x => x is > 0);
+            unitCostByProduct[p.Id] = c;
+        }
+
         var topProducts = salesSummary.TopProducts
-            .Select(p => new FinanceTopProductDto(
-                ProductName: p.ProductName,
-                Revenue: p.Revenue,
-                Cost: 0m,
-                Profit: p.Revenue,
-                Margin: 100m,
-                Quantity: p.Quantity))
+            .Select(p =>
+            {
+                unitCostByProduct.TryGetValue(p.ProductId, out var unitCost);
+                if (unitCost is > 0)
+                {
+                    var cost = unitCost.Value * p.Quantity;
+                    var profit = p.Revenue - cost;
+                    var margin = p.Revenue > 0 ? Math.Round(profit / p.Revenue * 100, 1) : (decimal?)null;
+                    return new FinanceTopProductDto(p.ProductName, p.Revenue, cost, profit, margin, p.Quantity);
+                }
+                // Sin costo conocido → no inventamos ganancia ni margen.
+                return new FinanceTopProductDto(p.ProductName, p.Revenue, null, null, null, p.Quantity);
+            })
             .ToList();
 
         return new FinanceDashboardDto(

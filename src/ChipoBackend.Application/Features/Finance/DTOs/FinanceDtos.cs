@@ -34,9 +34,9 @@ public record RevenueByDayDto(
 public record FinanceTopProductDto(
     string ProductName,
     decimal Revenue,
-    decimal Cost,
-    decimal Profit,
-    decimal Margin,
+    decimal? Cost,
+    decimal? Profit,
+    decimal? Margin,   // null = sin costo cargado (no se puede calcular)
     int Quantity);
 
 public record FinanceDashboardDto(
