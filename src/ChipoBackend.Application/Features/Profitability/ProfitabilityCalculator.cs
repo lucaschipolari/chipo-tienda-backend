@@ -36,7 +36,8 @@ public static class ProfitabilityCalculator
     /// <summary>Margen % = ((precio - costo) / precio) × 100. Null si el precio no es válido.</summary>
     public static decimal? Margin(decimal? salePrice, decimal? cost)
     {
-        if (salePrice is null or <= 0 || cost is null or < 0) return null;
+        // Sin costo válido (null o <= 0) no se puede calcular margen → "Sin datos" (evita el falso 100%).
+        if (salePrice is null or <= 0 || cost is null or <= 0) return null;
         return (salePrice.Value - cost.Value) / salePrice.Value * 100m;
     }
 
@@ -92,6 +93,10 @@ public static class ProfitabilityCalculator
         var source = productTargetMargin.HasValue ? "product"
                    : categoryTargetMargin.HasValue ? "category"
                    : "general";
+
+        // Normalizar: un costo <= 0 equivale a "sin costo" (no sabemos la ganancia real).
+        if (lastCost is <= 0) lastCost = null;
+        if (previousCost is <= 0) previousCost = null;
 
         var margin = Margin(salePrice, lastCost);
         var profit = (salePrice.HasValue && lastCost.HasValue) ? salePrice.Value - lastCost.Value : (decimal?)null;

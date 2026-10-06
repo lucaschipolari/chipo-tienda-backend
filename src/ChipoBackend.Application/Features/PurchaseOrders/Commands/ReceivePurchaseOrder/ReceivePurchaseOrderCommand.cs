@@ -46,6 +46,11 @@ public class ReceivePurchaseOrderCommandHandler(
                 purchaseOrderId: order.Id, createdByUserId: currentUser.UserId);
             unitOfWork.Add(costRecord);
 
+            // Actualizar el costo del producto al último costo de compra (para la ganancia real).
+            // No afecta el precio de venta. Los decants calculan su costo aparte (por ml), no se tocan.
+            if (!product!.IsDecant && item.UnitCost.Amount > 0)
+                variant.UpdateCost(item.UnitCost);
+
             var movement = StockMovement.Create(
                 item.ProductId, item.VariantId, MovementType.PurchaseReceipt,
                 quantityReceived, stockBefore, variant.StockQuantity,
