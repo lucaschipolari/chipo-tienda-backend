@@ -11,7 +11,9 @@ public record GetProductsQuery(
     int PageSize = 20,
     Guid? CategoryId = null,
     string? Search = null,
-    string? Status = null
+    string? Status = null,
+    string? Season = null,
+    string? Occasion = null
 ) : IRequest<PagedResult<ProductListItemDto>>;
 
 public class GetProductsQueryHandler(IProductRepository productRepository)
@@ -29,7 +31,8 @@ public class GetProductsQueryHandler(IProductRepository productRepository)
 
         var (products, total) = await productRepository.GetPagedAsync(
             request.Page, request.PageSize,
-            request.CategoryId, request.Search, statusFilter, ct);
+            request.CategoryId, request.Search, statusFilter,
+            request.Season, request.Occasion, ct);
 
         var dtos = products.Select(p =>
         {

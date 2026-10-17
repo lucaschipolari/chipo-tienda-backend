@@ -13,6 +13,8 @@ public interface IProductRepository : IRepository<Product>
         Guid? categoryId = null,
         string? search = null,
         ProductStatus? status = null,
+        string? season = null,
+        string? occasion = null,
         CancellationToken ct = default);
     Task<bool> SlugExistsAsync(string slug, Guid? excludeId = null, CancellationToken ct = default);
     Task<bool> SkuExistsAsync(string sku, Guid? excludeId = null, CancellationToken ct = default);

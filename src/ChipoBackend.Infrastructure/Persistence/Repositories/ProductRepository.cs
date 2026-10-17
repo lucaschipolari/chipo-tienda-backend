@@ -23,12 +23,15 @@ public class ProductRepository(AppDbContext context) : BaseRepository<Product>(c
 
     public async Task<(IReadOnlyList<Product> Items, int TotalCount)> GetPagedAsync(
         int page, int pageSize, Guid? categoryId = null, string? search = null,
-        ProductStatus? status = null, CancellationToken ct = default)
+        ProductStatus? status = null, string? season = null, string? occasion = null,
+        CancellationToken ct = default)
     {
         var query = DbSet.Include(p => p.Variants).Include(p => p.Images).Include(p => p.Category).AsQueryable();
 
         if (categoryId.HasValue) query = query.Where(p => p.CategoryId == categoryId);
         if (status.HasValue) query = query.Where(p => p.Status == status);
+        if (!string.IsNullOrWhiteSpace(season)) query = query.Where(p => p.Seasons.Contains(season));
+        if (!string.IsNullOrWhiteSpace(occasion)) query = query.Where(p => p.Occasions.Contains(occasion));
         if (!string.IsNullOrWhiteSpace(search))
         {
             // ILIKE → búsqueda insensible a mayúsculas ("PEPE" encuentra "pepe")

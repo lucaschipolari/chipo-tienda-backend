@@ -30,9 +30,11 @@ public class ProductsController : BaseApiController
         [FromQuery] Guid? categoryId = null,
         [FromQuery] string? search = null,
         [FromQuery] string? status = null,
+        [FromQuery] string? season = null,
+        [FromQuery] string? occasion = null,
         CancellationToken ct = default)
     {
-        var result = await Mediator.Send(new GetProductsQuery(page, pageSize, categoryId, search, status), ct);
+        var result = await Mediator.Send(new GetProductsQuery(page, pageSize, categoryId, search, status, season, occasion), ct);
         return Ok(result);
     }
 
