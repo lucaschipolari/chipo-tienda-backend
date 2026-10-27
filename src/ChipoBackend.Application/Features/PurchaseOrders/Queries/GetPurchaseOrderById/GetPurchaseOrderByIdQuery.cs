@@ -22,12 +22,14 @@ public class GetPurchaseOrderByIdQueryHandler(
 
         // Hidratar nombres de producto y SKU de variante
         var productNames = new Dictionary<Guid, string>();
+        var productImages = new Dictionary<Guid, string?>();
         var variantSkus = new Dictionary<Guid, string>();
         foreach (var pid in order.Items.Select(i => i.ProductId).Distinct())
         {
             var product = await productRepository.GetWithVariantsAsync(pid, ct);
             if (product is null) continue;
             productNames[pid] = product.Name;
+            productImages[pid] = product.Images.OrderBy(im => im.DisplayOrder).FirstOrDefault()?.Url;
             foreach (var v in product.Variants)
                 variantSkus[v.Id] = v.Sku;
         }
@@ -48,6 +50,7 @@ public class GetPurchaseOrderByIdQueryHandler(
                 Id: i.Id,
                 ProductId: i.ProductId,
                 ProductName: productNames.GetValueOrDefault(i.ProductId),
+                ImageUrl: productImages.GetValueOrDefault(i.ProductId),
                 VariantId: i.VariantId,
                 VariantSku: variantSkus.GetValueOrDefault(i.VariantId),
                 Quantity: i.QuantityOrdered,

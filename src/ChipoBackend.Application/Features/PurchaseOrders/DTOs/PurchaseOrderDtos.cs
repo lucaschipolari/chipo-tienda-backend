@@ -17,6 +17,7 @@ public record PurchaseOrderItemDto(
     Guid Id,
     Guid ProductId,
     string? ProductName,
+    string? ImageUrl,
     Guid VariantId,
     string? VariantSku,
     int Quantity,
