@@ -1,3 +1,4 @@
+using ChipoBackend.Application.Common;
 using ChipoBackend.Domain.Entities.Sales;
 using ChipoBackend.Domain.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -75,9 +76,9 @@ public class SaleRepository(AppDbContext context) : BaseRepository<Sale>(context
         var totalSales = sales.Count;
         var avgTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
 
-        // Ventas por día
+        // Ventas por día (agrupadas en hora local Argentina)
         var byDay = sales
-            .GroupBy(s => s.CreatedAt.Date)
+            .GroupBy(s => AppTime.ToLocal(s.CreatedAt).Date)
             .OrderBy(g => g.Key)
             .Select(g => (
                 Date: g.Key,

@@ -1,3 +1,4 @@
+using ChipoBackend.Application.Common;
 using ChipoBackend.Application.Features.Finance.DTOs;
 using ChipoBackend.Domain.Entities.Expenses;
 using ChipoBackend.Domain.Entities.Purchasing;
@@ -90,7 +91,7 @@ public class GetFinanceDashboardQueryHandler(
 
         var purchasesByDay = allPurchases
             .Where(p => p.CreatedAt >= from && p.CreatedAt <= to)
-            .GroupBy(p => p.CreatedAt.Date)
+            .GroupBy(p => AppTime.ToLocal(p.CreatedAt).Date)
             .ToDictionary(g => g.Key, g => g.Sum(p => p.Total.Amount));
 
         var revenueByDay = salesSummary.ByDay
@@ -109,9 +110,13 @@ public class GetFinanceDashboardQueryHandler(
             .ToList();
 
         // ── Cash flow (daily) ─────────────────────────────────────────────────
+        // Días del período en fecha local (Argentina), para que el eje coincida
+        // con el agrupado por día de las ventas.
+        var fromLocalDate = AppTime.ToLocal(from).Date;
+        var toLocalDate = AppTime.ToLocal(to).Date;
         var allDays = Enumerable
-            .Range(0, (int)(to.Date - from.Date).TotalDays + 1)
-            .Select(i => from.Date.AddDays(i))
+            .Range(0, (int)(toLocalDate - fromLocalDate).TotalDays + 1)
+            .Select(i => fromLocalDate.AddDays(i))
             .ToList();
 
         var salesByDay = salesSummary.ByDay
@@ -181,38 +186,32 @@ public class GetFinanceDashboardQueryHandler(
 
     private static (DateTime From, DateTime To) ResolveDateRange(GetFinanceDashboardQuery request)
     {
-        var now = DateTime.UtcNow;
-        var today = now.Date;
+        // Los períodos se calculan en hora local (Argentina) y luego se
+        // convierten a UTC para consultar, así "hoy / semana / mes" no incluye
+        // las ventas de la noche que en UTC caen al día siguiente.
+        var today = AppTime.LocalToday;
 
-        return request.Period.ToLowerInvariant() switch
+        var (fromLocal, toLocal) = request.Period.ToLowerInvariant() switch
         {
-            "today" => (
-                DateTime.SpecifyKind(today, DateTimeKind.Utc),
-                DateTime.SpecifyKind(today.AddDays(1).AddTicks(-1), DateTimeKind.Utc)),
+            "today" => (today, today.AddDays(1).AddTicks(-1)),
 
-            "week" => (
-                DateTime.SpecifyKind(StartOfWeek(today), DateTimeKind.Utc),
-                DateTime.SpecifyKind(today.AddDays(1).AddTicks(-1), DateTimeKind.Utc)),
+            "week" => (StartOfWeek(today), today.AddDays(1).AddTicks(-1)),
 
-            "month" => (
-                DateTime.SpecifyKind(new DateTime(today.Year, today.Month, 1), DateTimeKind.Utc),
-                DateTime.SpecifyKind(today.AddDays(1).AddTicks(-1), DateTimeKind.Utc)),
+            "month" => (new DateTime(today.Year, today.Month, 1), today.AddDays(1).AddTicks(-1)),
 
-            "year" => (
-                DateTime.SpecifyKind(new DateTime(today.Year, 1, 1), DateTimeKind.Utc),
-                DateTime.SpecifyKind(today.AddDays(1).AddTicks(-1), DateTimeKind.Utc)),
+            "year" => (new DateTime(today.Year, 1, 1), today.AddDays(1).AddTicks(-1)),
 
             "custom" => (
-                DateTime.SpecifyKind(
-                    (request.From ?? today).Date, DateTimeKind.Utc),
-                DateTime.SpecifyKind(
-                    (request.To ?? today).Date.AddDays(1).AddTicks(-1), DateTimeKind.Utc)),
+                (request.From ?? today).Date,
+                (request.To ?? today).Date.AddDays(1).AddTicks(-1)),
 
             // default: month
-            _ => (
-                DateTime.SpecifyKind(new DateTime(today.Year, today.Month, 1), DateTimeKind.Utc),
-                DateTime.SpecifyKind(today.AddDays(1).AddTicks(-1), DateTimeKind.Utc))
+            _ => (new DateTime(today.Year, today.Month, 1), today.AddDays(1).AddTicks(-1))
         };
+
+        return (
+            DateTime.SpecifyKind(AppTime.ToUtc(fromLocal), DateTimeKind.Utc),
+            DateTime.SpecifyKind(AppTime.ToUtc(toLocal), DateTimeKind.Utc));
     }
 
     private static DateTime StartOfWeek(DateTime date)

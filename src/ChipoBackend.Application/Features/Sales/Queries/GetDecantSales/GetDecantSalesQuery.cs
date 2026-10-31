@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using ChipoBackend.Application.Common;
 using ChipoBackend.Domain.Interfaces.Repositories;
 using MediatR;
 
@@ -34,14 +35,19 @@ public class GetDecantSalesQueryHandler(
             _ => "day"
         };
 
-        var today = DateTime.UtcNow.Date;
-        DateTime from = gran switch
+        // Agrupamos por día local (Argentina): si usáramos UTC, las ventas de
+        // la noche caerían en el día siguiente.
+        var today = AppTime.LocalToday;
+        DateTime fromLocal = gran switch
         {
             "week" => today.AddDays(-7 * 11),   // 12 semanas
             "month" => new DateTime(today.Year, today.Month, 1).AddMonths(-11), // 12 meses
             _ => today.AddDays(-29)             // 30 días
         };
-        var to = today.AddDays(1).AddTicks(-1); // fin del día de hoy
+        var toLocal = today.AddDays(1).AddTicks(-1); // fin del día de hoy (local)
+        // Rango a consultar en UTC (los timestamps se guardan en UTC).
+        var from = AppTime.ToUtc(fromLocal);
+        var to = AppTime.ToUtc(toLocal);
 
         // Mapa de variantes decant -> ml por unidad, y set de productos decant
         var products = await productRepository.GetAllWithVariantsAndCategoryAsync(ct);
@@ -67,7 +73,7 @@ public class GetDecantSalesQueryHandler(
 
         foreach (var sale in sales)
         {
-            var key = KeyFor(gran, sale.CreatedAt);
+            var key = KeyFor(gran, AppTime.ToLocal(sale.CreatedAt));
             if (!unitsByKey.ContainsKey(key)) continue; // fuera de rango
             foreach (var item in sale.Items)
             {
