@@ -59,8 +59,22 @@ public class SaleRepository(AppDbContext context) : BaseRepository<Sale>(context
     public async Task<string> GenerateSaleNumberAsync(CancellationToken ct = default)
     {
         var year = DateTime.UtcNow.Year;
-        var count = await DbSet.CountAsync(s => s.CreatedAt.Year == year, ct);
-        return $"VTA-{year}-{(count + 1):D5}";
+        var prefix = $"VTA-{year}-";
+
+        // Usamos el MAYOR número ya usado este año, no el conteo de ventas: si se
+        // borró alguna venta, "count + 1" pisaría un número existente y falla con
+        // "duplicate key violates unique constraint IX_sales_SaleNumber".
+        var last = await DbSet
+            .Where(s => s.SaleNumber.StartsWith(prefix))
+            .Select(s => s.SaleNumber)
+            .OrderByDescending(n => n)
+            .FirstOrDefaultAsync(ct);
+
+        var next = 1;
+        if (last != null && int.TryParse(last.Substring(prefix.Length), out var n))
+            next = n + 1;
+
+        return $"{prefix}{next:D5}";
     }
 
     public async Task<SalesSummaryData> GetSummaryAsync(DateTime from, DateTime to, CancellationToken ct = default)
