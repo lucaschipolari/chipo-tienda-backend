@@ -8,7 +8,8 @@ public enum CostSource
 {
     Initial,          // carga/backfill inicial
     PurchaseReceipt,  // se recibió una orden de compra
-    ManualEdit        // el admin editó el costo de la variante a mano
+    ManualEdit,       // el admin editó el costo de la variante a mano
+    PricingCalculator // lo calculó la Calculadora de precios (USD × USDT + gastos)
 }
 
 /// <summary>

@@ -21,6 +21,12 @@ public class ProductRepository(AppDbContext context) : BaseRepository<Product>(c
         await DbSet.Include(p => p.Variants).Include(p => p.Category)
             .OrderBy(p => p.Name).ToListAsync(ct);
 
+    public async Task<IReadOnlyList<Product>> GetAllForPricingAsync(CancellationToken ct = default) =>
+        await DbSet.AsNoTracking().AsSplitQuery()
+            .Include(p => p.Variants).Include(p => p.Images).Include(p => p.Category)
+            .Where(p => p.Status != ProductStatus.Discontinued)
+            .OrderBy(p => p.Name).ToListAsync(ct);
+
     public async Task<(IReadOnlyList<Product> Items, int TotalCount)> GetPagedAsync(
         int page, int pageSize, Guid? categoryId = null, string? search = null,
         ProductStatus? status = null, string? season = null, string? occasion = null,

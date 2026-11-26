@@ -163,6 +163,39 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                     b.ToTable("categories", "catalog");
                 });
 
+            modelBuilder.Entity("ChipoBackend.Domain.Entities.Catalog.PricingCalculatorEntry", b =>
+                {
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("CostUsdOrigin")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<decimal>("FixedCommission")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<string>("MarginType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<decimal>("MarginValue")
+                        .HasColumnType("decimal(14,2)");
+
+                    b.Property<decimal>("PercentageCommission")
+                        .HasColumnType("decimal(7,3)");
+
+                    b.Property<decimal>("ShippingCost")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("ProductId");
+
+                    b.ToTable("pricing_calculator_entries", "catalog");
+                });
+
             modelBuilder.Entity("ChipoBackend.Domain.Entities.Catalog.Product", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1895,6 +1928,15 @@ namespace ChipoBackend.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("ParentCategory");
+                });
+
+            modelBuilder.Entity("ChipoBackend.Domain.Entities.Catalog.PricingCalculatorEntry", b =>
+                {
+                    b.HasOne("ChipoBackend.Domain.Entities.Catalog.Product", null)
+                        .WithOne()
+                        .HasForeignKey("ChipoBackend.Domain.Entities.Catalog.PricingCalculatorEntry", "ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ChipoBackend.Domain.Entities.Catalog.Product", b =>
